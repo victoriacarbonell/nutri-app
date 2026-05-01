@@ -184,3 +184,23 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+@keyframes scan {
+  0%   { top: 8px; opacity: 1; }
+  50%  { top: calc(100% - 8px); opacity: 1; }
+  100% { top: 8px; opacity: 1; }
+}
+
+.animate-scan {
+  animation: scan 2s linear infinite;
+  position: absolute;
+}
+
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
