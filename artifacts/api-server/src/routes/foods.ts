@@ -30,10 +30,12 @@ router.get("/categories", async (req, res) => {
 
 router.get("/", async (req, res) => {
   const params = GetFoodsQueryParams.parse(req.query);
+  const hasBarcode = req.query.hasBarcode === "true";
   const conditions = [];
   if (params.q) conditions.push(ilike(foodsTable.name, `%${params.q}%`));
   if (params.category) conditions.push(eq(foodsTable.category, params.category));
   if (params.barcode) conditions.push(eq(foodsTable.barcode, params.barcode));
+  if (hasBarcode) conditions.push(sql`${foodsTable.barcode} IS NOT NULL AND ${foodsTable.barcode} != ''`);
   const limit = params.limit ?? 50;
   const offset = params.offset ?? 0;
   const where = conditions.length ? and(...conditions) : undefined;
