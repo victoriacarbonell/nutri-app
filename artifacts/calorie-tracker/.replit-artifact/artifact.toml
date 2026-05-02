@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "CalorApp"
+title = "NutriApp"
 version = "1.0.0"
 id = "artifacts/calorie-tracker"
 router = "path"
