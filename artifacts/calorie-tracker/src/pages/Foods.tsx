@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
-import { useGetFoods, getGetFoodsQueryKey, useCreateLogEntry, getGetDayLogQueryKey, getGetTodaySummaryQueryKey } from "@workspace/api-client-react";
-import { Search, Plus, Loader2, ScanBarcode, ChevronRight, X } from "lucide-react";
+import {
+  useGetFoods, getGetFoodsQueryKey,
+  useCreateLogEntry, getGetDayLogQueryKey, getGetTodaySummaryQueryKey,
+} from "@workspace/api-client-react";
+import { Search, Plus, Loader2, ScanBarcode, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,28 +15,28 @@ import type { Food } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
-function useFoodsWithBarcode() {
-  const [data, setData] = useState<Food[]>([]);
-  const [loading, setLoading] = useState(true);
+// ─── Category config ──────────────────────────────────────────────────────────
 
-  const refetch = () => {
-    setLoading(true);
-    fetch("/api/foods?hasBarcode=true&limit=30")
-      .then((r) => r.json())
-      .then((d) => {
-        setData(d.foods ?? []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  };
+const CATEGORIES = [
+  { value: "frutas",    label: "Frutas",    emoji: "🍎" },
+  { value: "verduras",  label: "Verduras",  emoji: "🥦" },
+  { value: "carnes",    label: "Carnes",    emoji: "🥩" },
+  { value: "pescados",  label: "Pescados",  emoji: "🐟" },
+  { value: "lacteos",   label: "Lácteos",   emoji: "🥛" },
+  { value: "cereales",  label: "Cereales",  emoji: "🌾" },
+  { value: "legumbres", label: "Legumbres", emoji: "🫘" },
+  { value: "bebidas",   label: "Bebidas",   emoji: "🧃" },
+  { value: "snacks",    label: "Snacks",    emoji: "🍿" },
+  { value: "otros",     label: "Otros",     emoji: "🍽️" },
+];
 
-  useEffect(() => {
-    refetch();
-  }, []);
-
-  return { data, loading, refetch };
+function getCategoryEmoji(category: string) {
+  return CATEGORIES.find(c => c.value === category.toLowerCase())?.emoji ?? "🍽️";
 }
+
+// ─── Quick-add modal (same as before) ────────────────────────────────────────
 
 function QuickAddModal({ food, open, onOpenChange }: { food: Food | null; open: boolean; onOpenChange: (v: boolean) => void }) {
   const [amount, setAmount] = useState("100");
@@ -68,8 +71,17 @@ function QuickAddModal({ food, open, onOpenChange }: { food: Food | null; open: 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md rounded-3xl p-6">
         <DialogHeader>
-          <DialogTitle className="text-xl font-serif leading-tight">{food.name}</DialogTitle>
-          {food.brand && <p className="text-sm text-muted-foreground">{food.brand}</p>}
+          <div className="flex items-center gap-3 mb-1">
+            {food.photoUrl ? (
+              <span className="text-4xl">{food.photoUrl.length <= 4 ? food.photoUrl : ""}</span>
+            ) : (
+              <span className="text-4xl">{getCategoryEmoji(food.category)}</span>
+            )}
+            <div>
+              <DialogTitle className="text-xl font-serif leading-tight">{food.name}</DialogTitle>
+              {food.brand && <p className="text-sm text-muted-foreground">{food.brand}</p>}
+            </div>
+          </div>
         </DialogHeader>
         <div className="bg-secondary/30 p-4 rounded-2xl my-4 grid grid-cols-4 gap-2 text-center">
           <div>
@@ -129,63 +141,139 @@ function QuickAddModal({ food, open, onOpenChange }: { food: Food | null; open: 
   );
 }
 
+// ─── Food card ────────────────────────────────────────────────────────────────
+
+function FoodIcon({ food }: { food: Food }) {
+  const isEmoji = food.photoUrl && food.photoUrl.length <= 4;
+  const isUrl = food.photoUrl && !isEmoji;
+
+  if (isUrl) {
+    return (
+      <div className="w-12 h-12 rounded-2xl overflow-hidden shrink-0 bg-secondary">
+        <img src={food.photoUrl!} alt={food.name} className="w-full h-full object-cover" />
+      </div>
+    );
+  }
+
+  const emoji = isEmoji ? food.photoUrl! : getCategoryEmoji(food.category);
+  return (
+    <div className="w-12 h-12 rounded-2xl bg-secondary/60 flex items-center justify-center shrink-0 text-2xl">
+      {emoji}
+    </div>
+  );
+}
+
 function FoodCard({ food, onAdd }: { food: Food; onAdd: (f: Food) => void }) {
   return (
     <div
-      className="bg-card rounded-2xl p-4 shadow-sm border flex items-center justify-between cursor-pointer hover:border-primary/30 transition-colors active:scale-[0.98]"
+      className="bg-card rounded-2xl p-3.5 shadow-sm border flex items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors active:scale-[0.98]"
       onClick={() => onAdd(food)}
     >
+      <FoodIcon food={food} />
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <h3 className="font-medium text-foreground truncate">{food.name}</h3>
-          {food.barcode && (
-            <ScanBarcode size={12} className="text-muted-foreground shrink-0" />
-          )}
+        <div className="flex items-center gap-1.5">
+          <h3 className="font-medium text-foreground truncate text-sm">{food.name}</h3>
+          {food.barcode && <ScanBarcode size={11} className="text-muted-foreground shrink-0" />}
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">
           {food.brand ? `${food.brand} · ` : ""}
-          {food.caloriesPer100g} kcal / 100{food.unit}
+          {food.caloriesPer100g} kcal/100{food.unit}
         </p>
-        <div className="flex gap-2 mt-1.5 text-[10px] font-medium text-muted-foreground">
+        <div className="flex gap-2 mt-1 text-[10px] font-medium text-muted-foreground">
           <span className="text-chart-1">P: {food.proteinPer100g}g</span>
           <span className="text-chart-3">C: {food.carbsPer100g}g</span>
           <span className="text-chart-2">G: {food.fatPer100g}g</span>
         </div>
       </div>
-      <Button size="icon" variant="ghost" className="rounded-full bg-secondary/50 text-primary pointer-events-none shrink-0 ml-3">
+      <Button size="icon" variant="ghost" className="rounded-full bg-secondary/50 text-primary pointer-events-none shrink-0">
         <Plus size={18} />
       </Button>
     </div>
   );
 }
 
+// ─── Category chips ───────────────────────────────────────────────────────────
+
+function CategoryChips({ selected, onChange }: { selected: string | null; onChange: (v: string | null) => void }) {
+  return (
+    <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide -mx-4 px-4">
+      <button
+        onClick={() => onChange(null)}
+        className={cn(
+          "flex items-center gap-1.5 px-3.5 h-8 rounded-full text-xs font-medium whitespace-nowrap transition-colors shrink-0",
+          !selected ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+        )}
+      >
+        Todos
+      </button>
+      {CATEGORIES.map(cat => (
+        <button
+          key={cat.value}
+          onClick={() => onChange(cat.value === selected ? null : cat.value)}
+          className={cn(
+            "flex items-center gap-1.5 px-3.5 h-8 rounded-full text-xs font-medium whitespace-nowrap transition-colors shrink-0",
+            selected === cat.value
+              ? "bg-primary text-primary-foreground"
+              : "bg-secondary text-muted-foreground hover:bg-secondary/80"
+          )}
+        >
+          {cat.emoji} {cat.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Main Foods page ──────────────────────────────────────────────────────────
+
 export default function Foods() {
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedFood, setSelectedFood] = useState<Food | null>(null);
   const [quickAddFood, setQuickAddFood] = useState<Food | null>(null);
-  const [showAllScanned, setShowAllScanned] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 400);
     return () => clearTimeout(timer);
   }, [search]);
 
+  const queryParams = {
+    q: debouncedSearch || undefined,
+    category: selectedCategory || undefined,
+    limit: 100,
+  };
+
   const { data, isLoading } = useGetFoods(
-    { q: debouncedSearch || undefined, limit: 50 },
-    { query: { queryKey: getGetFoodsQueryKey({ q: debouncedSearch || undefined, limit: 50 }) } }
+    queryParams,
+    { query: { queryKey: getGetFoodsQueryKey(queryParams) } }
   );
 
-  const { data: scannedFoods, loading: scannedLoading, refetch: refetchScanned } = useFoodsWithBarcode();
+  const isSearching = debouncedSearch.length > 0 || !!selectedCategory;
+  const foods = data?.foods ?? [];
 
-  const isSearching = debouncedSearch.length > 0;
-  const visibleScanned = showAllScanned ? scannedFoods : scannedFoods.slice(0, 4);
+  // Group by category when not filtering
+  const groupedFoods = !isSearching
+    ? foods.reduce<Record<string, Food[]>>((acc, food) => {
+        const cat = food.category || "otros";
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(food);
+        return acc;
+      }, {})
+    : null;
+
+  const sortedCategories = groupedFoods
+    ? Object.keys(groupedFoods).sort((a, b) => {
+        const order = CATEGORIES.map(c => c.value);
+        return (order.indexOf(a) ?? 99) - (order.indexOf(b) ?? 99);
+      })
+    : [];
 
   return (
     <div className="min-h-[100dvh] bg-background pt-8 px-4 pb-24">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-5">
         <h1 className="text-3xl font-serif text-foreground font-medium">Alimentos</h1>
         <Button onClick={() => setIsCreateModalOpen(true)} className="rounded-full w-10 h-10 p-0 shadow-sm">
           <Plus size={20} />
@@ -193,8 +281,8 @@ export default function Foods() {
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+      <div className="relative mb-4">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
         <Input
           className="pl-10 pr-10 rounded-2xl h-12 bg-card border-none shadow-sm text-base"
           placeholder="Buscar alimentos..."
@@ -202,116 +290,73 @@ export default function Foods() {
           onChange={(e) => setSearch(e.target.value)}
         />
         {search && (
-          <button
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-            onClick={() => setSearch("")}
-          >
+          <button className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={() => setSearch("")}>
             <X size={18} />
           </button>
         )}
       </div>
 
-      {/* ── Scanned foods section (hidden while searching) ── */}
-      {!isSearching && scannedFoods.length > 0 && (
-        <div className="mb-7">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <ScanBarcode size={16} className="text-primary" />
-              <h2 className="text-sm font-semibold text-foreground">Escaneados recientemente</h2>
-            </div>
-            {scannedFoods.length > 4 && (
-              <button
-                onClick={() => setShowAllScanned((v) => !v)}
-                className="text-xs text-primary font-medium flex items-center gap-0.5"
-              >
-                {showAllScanned ? "Ver menos" : `Ver todos (${scannedFoods.length})`}
-                <ChevronRight size={14} className={`transition-transform ${showAllScanned ? "rotate-90" : ""}`} />
-              </button>
-            )}
-          </div>
+      {/* Category chips */}
+      <div className="mb-5">
+        <CategoryChips selected={selectedCategory} onChange={setSelectedCategory} />
+      </div>
 
-          {scannedLoading ? (
-            <div className="space-y-3">
-              {[1, 2].map((i) => (
-                <div key={i} className="bg-card rounded-2xl p-4 border flex items-center justify-between">
-                  <div className="space-y-2">
-                    <Skeleton className="h-5 w-40" />
-                    <Skeleton className="h-3 w-28" />
-                  </div>
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                </div>
-              ))}
+      {/* Food list */}
+      {isLoading ? (
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="bg-card rounded-2xl p-3.5 shadow-sm border flex items-center gap-3">
+              <Skeleton className="w-12 h-12 rounded-2xl shrink-0" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-3 w-24" />
+              </div>
+              <Skeleton className="h-9 w-9 rounded-full" />
             </div>
-          ) : (
-            <div className="space-y-3">
-              {visibleScanned.map((food) => (
-                <div
-                  key={food.id}
-                  className="bg-gradient-to-r from-card to-secondary/20 rounded-2xl p-4 border border-primary/10 flex items-center gap-3 cursor-pointer hover:border-primary/30 transition-colors active:scale-[0.98]"
-                  onClick={() => setQuickAddFood(food)}
-                >
-                  {/* Barcode icon badge */}
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <ScanBarcode size={18} className="text-primary" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground text-sm truncate">{food.name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {food.brand ? `${food.brand} · ` : ""}
-                      {food.caloriesPer100g} kcal/100g
-                    </p>
-                    <div className="flex gap-2 mt-1 text-[10px] font-medium">
-                      <span className="text-chart-1">P:{food.proteinPer100g}g</span>
-                      <span className="text-chart-3">C:{food.carbsPer100g}g</span>
-                      <span className="text-chart-2">G:{food.fatPer100g}g</span>
-                    </div>
-                  </div>
-                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Plus size={16} className="text-primary" />
-                  </div>
+          ))}
+        </div>
+      ) : foods.length === 0 ? (
+        <div className="text-center py-12 text-muted-foreground">
+          <p className="text-4xl mb-3">🔍</p>
+          <p>{isSearching ? `Sin resultados${debouncedSearch ? ` para "${debouncedSearch}"` : ""}` : "No hay alimentos aún."}</p>
+          <Button variant="link" onClick={() => setIsCreateModalOpen(true)} className="mt-2 text-primary">
+            Crear nuevo alimento
+          </Button>
+        </div>
+      ) : isSearching || !groupedFoods ? (
+        /* Flat list when searching or filtering */
+        <div className="space-y-3">
+          {foods.map(food => (
+            <FoodCard key={food.id} food={food} onAdd={setSelectedFood} />
+          ))}
+        </div>
+      ) : (
+        /* Grouped by category when browsing */
+        <div className="space-y-6">
+          {sortedCategories.map(cat => {
+            const catInfo = CATEGORIES.find(c => c.value === cat);
+            const items = groupedFoods[cat];
+            return (
+              <div key={cat}>
+                <div className="flex items-center gap-2 mb-3 px-1">
+                  <span className="text-xl">{catInfo?.emoji ?? "🍽️"}</span>
+                  <h2 className="font-serif text-base font-medium capitalize">{catInfo?.label ?? cat}</h2>
+                  <span className="text-xs text-muted-foreground">({items.length})</span>
                 </div>
-              ))}
-            </div>
-          )}
+                <div className="space-y-2.5">
+                  {items.map(food => (
+                    <FoodCard key={food.id} food={food} onAdd={setSelectedFood} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 
-      {/* ── All foods / search results ── */}
-      {!isSearching && scannedFoods.length > 0 && (
-        <h2 className="text-sm font-semibold text-foreground mb-3">Todos los alimentos</h2>
-      )}
-
-      <div className="space-y-3">
-        {isLoading ? (
-          Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="bg-card rounded-2xl p-4 shadow-sm border flex items-center justify-between">
-              <div className="space-y-2">
-                <Skeleton className="h-5 w-32" />
-                <Skeleton className="h-4 w-24" />
-              </div>
-              <Skeleton className="h-10 w-10 rounded-full" />
-            </div>
-          ))
-        ) : data?.foods.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            <p>{isSearching ? `Sin resultados para "${search}"` : "No hay alimentos aún."}</p>
-            <Button variant="link" onClick={() => setIsCreateModalOpen(true)} className="mt-2 text-primary">
-              Crear nuevo alimento
-            </Button>
-          </div>
-        ) : (
-          data?.foods.map((food) => (
-            <FoodCard key={food.id} food={food} onAdd={setSelectedFood} />
-          ))
-        )}
-      </div>
-
       <CreateFoodModal
         open={isCreateModalOpen}
-        onOpenChange={(v) => {
-          setIsCreateModalOpen(v);
-          if (!v) refetchScanned();
-        }}
+        onOpenChange={(v) => setIsCreateModalOpen(v)}
       />
 
       {selectedFood && (

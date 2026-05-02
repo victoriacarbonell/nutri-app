@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Home, Apple, BookOpen, Calendar, User, MoreHorizontal, Camera, BarChart2, TrendingUp } from "lucide-react";
+import { Home, Apple, BookOpen, Calendar, User, MoreHorizontal, Camera, BarChart2, TrendingUp, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 
@@ -75,7 +75,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   <BarChart2 size={28} />
                   <span className="text-xs font-medium">Estadísticas</span>
                 </Link>
-                <Link href="/perfil" className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors col-span-3 mt-2">
+                <Link href="/ia" className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-primary/10 border border-primary/20 text-primary hover:bg-primary/15 transition-colors col-span-3">
+                  <Sparkles size={28} />
+                  <span className="text-sm font-semibold">Análisis con IA</span>
+                </Link>
+                <Link href="/perfil" className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors col-span-3">
                   <User size={24} />
                   <span className="text-sm font-medium">Mi Perfil & Objetivos</span>
                 </Link>

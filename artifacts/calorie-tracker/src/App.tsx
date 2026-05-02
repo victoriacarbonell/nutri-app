@@ -12,6 +12,7 @@ import Profile from "./pages/Profile";
 import Scan from "./pages/Scan";
 import Progress from "./pages/Progress";
 import Stats from "./pages/Stats";
+import AISummaries from "./pages/AISummaries";
 import AppLayout from "./components/layout/AppLayout";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ function Router() {
         <Route path="/escanear" component={Scan} />
         <Route path="/progreso" component={Progress} />
         <Route path="/estadisticas" component={Stats} />
+        <Route path="/ia" component={AISummaries} />
         <Route component={NotFound} />
       </Switch>
     </AppLayout>
