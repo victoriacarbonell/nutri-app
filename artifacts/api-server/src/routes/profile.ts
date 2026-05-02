@@ -28,7 +28,7 @@ function calcHarrisBenedict(profile: typeof userProfileTable.$inferSelect): numb
 
 router.get("/", async (req, res) => {
   const profiles = await db.select().from(userProfileTable).limit(1);
-  if (!profiles.length) return res.status(404).json({ error: "Profile not found" });
+  if (!profiles.length) return res.json(null);
   const p = profiles[0];
   return res.json({ ...p, calculatedCalorieGoal: calcHarrisBenedict(p) });
 });
