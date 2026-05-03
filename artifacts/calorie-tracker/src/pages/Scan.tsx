@@ -28,13 +28,13 @@ export default function Scan() {
   const [mode, setMode] = useState<Mode>("ai");
   const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
 
-  // AI mode state
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<FoodAnalysisResult | null>(null);
+  const [analysisMealType, setAnalysisMealType] = useState("almuerzo");
+  const [analysisAmount, setAnalysisAmount] = useState("100");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Barcode add dialog state
   const [barcodeItem, setBarcodeItem] = useState<AddBarcodeItemState | null>(null);
 
   const { toast } = useToast();
@@ -65,10 +65,59 @@ export default function Scan() {
   const resetAI = () => {
     setImagePreview(null);
     setAnalysisResult(null);
+    setAnalysisMealType("almuerzo");
+    setAnalysisAmount("100");
   };
 
   const handleBarcodeResult = (product: OffProductInfo) => {
     setBarcodeItem({ product, amount: "100", mealType: "almuerzo" });
+  };
+
+  const handleAddAnalysisFood = () => {
+    if (!analysisResult) return;
+
+    const today = format(new Date(), "yyyy-MM-dd");
+    const grams = parseFloat(analysisAmount) || 100;
+    const mealType = analysisMealType;
+    const data = analysisResult.items[0];
+
+    createFood.mutate(
+      {
+        data: {
+          name: analysisResult.description || data?.name || "Comida analizada",
+          category: "otros",
+          caloriesPer100g: data?.caloriesPer100g ?? Math.round((analysisResult.totalCalories || 0) / Math.max(grams / 100, 1)),
+          proteinPer100g: data?.proteinPer100g ?? analysisResult.totalProtein ?? 0,
+          carbsPer100g: data?.carbsPer100g ?? analysisResult.totalCarbs ?? 0,
+          fatPer100g: data?.fatPer100g ?? analysisResult.totalFat ?? 0,
+          fiberPer100g: 0,
+          unit: "g",
+          photoUrl: imagePreview,
+        },
+      },
+      {
+        onSuccess: (food) => {
+          createLogEntry.mutate(
+            { date: today, data: { mealType: mealType as any, foodId: food.id, amountGrams: grams } },
+            {
+              onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: getGetDayLogQueryKey(today) });
+                queryClient.invalidateQueries({ queryKey: getGetTodaySummaryQueryKey() });
+                toast({ title: "¡Añadido!", description: `${analysisResult.description || "Comida"} guardada y añadida a ${mealType}.` });
+                setImagePreview(null);
+                setAnalysisResult(null);
+                setAnalysisMealType("almuerzo");
+                setAnalysisAmount("100");
+              },
+              onError: () =>
+                toast({ title: "Error", description: "No se pudo registrar en el diario.", variant: "destructive" }),
+            }
+          );
+        },
+        onError: () =>
+          toast({ title: "Error", description: "No se pudo guardar el alimento.", variant: "destructive" }),
+      }
+    );
   };
 
   const handleAddBarcodeFood = async () => {
@@ -118,7 +167,6 @@ export default function Scan() {
     <div className="min-h-[100dvh] bg-background pt-8 px-4 pb-24 flex flex-col">
       <h1 className="text-3xl font-serif text-foreground font-medium mb-5">Escanear</h1>
 
-      {/* Mode toggle */}
       <div className="flex bg-secondary/40 rounded-2xl p-1 mb-6 gap-1">
         <button
           onClick={() => setMode("ai")}
@@ -140,7 +188,6 @@ export default function Scan() {
         </button>
       </div>
 
-      {/* ─── AI MODE ─── */}
       {mode === "ai" && (
         <>
           {!imagePreview ? (
@@ -227,6 +274,29 @@ export default function Scan() {
                     ))}
                   </div>
 
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                      <label className="text-sm font-medium mb-1.5 block">Cantidad total (g)</label>
+                      <Input value={analysisAmount} onChange={(e) => setAnalysisAmount(e.target.value)} className="bg-secondary/30 border-none rounded-xl h-12" type="number" />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-1.5 block">Comida</label>
+                      <Select value={analysisMealType} onValueChange={setAnalysisMealType}>
+                        <SelectTrigger className="bg-secondary/30 border-none rounded-xl h-12 text-base">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="desayuno">Desayuno</SelectItem>
+                          <SelectItem value="almuerzo">Almuerzo</SelectItem>
+                          <SelectItem value="comida">Comida</SelectItem>
+                          <SelectItem value="merienda">Merienda</SelectItem>
+                          <SelectItem value="cena">Cena</SelectItem>
+                          <SelectItem value="snacks">Snacks</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
                   {analysisResult.notes && (
                     <Alert className="bg-secondary/30 border-none mb-6">
                       <Info className="h-4 w-4 text-primary" />
@@ -238,7 +308,10 @@ export default function Scan() {
                     <Button variant="outline" className="rounded-xl h-12" onClick={resetAI}>
                       Descartar
                     </Button>
-                    <Button className="rounded-xl h-12">Añadir a comida</Button>
+                    <Button className="rounded-xl h-12" onClick={handleAddAnalysisFood} disabled={isSaving || analyzeImage.isPending}>
+                      {isSaving && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                      Añadir a comida
+                    </Button>
                   </div>
                 </div>
               )}
@@ -247,7 +320,6 @@ export default function Scan() {
         </>
       )}
 
-      {/* ─── BARCODE MODE ─── */}
       {mode === "barcode" && (
         <div className="flex-1 flex flex-col items-center justify-center mt-4 space-y-6">
           <div className="w-56 h-56 rounded-3xl bg-secondary/30 border-2 border-dashed border-primary/30 flex flex-col items-center justify-center gap-4 relative overflow-hidden">
@@ -274,7 +346,6 @@ export default function Scan() {
         </div>
       )}
 
-      {/* Barcode camera overlay */}
       {showBarcodeScanner && (
         <BarcodeScanner
           onResult={handleBarcodeResult}
@@ -282,7 +353,6 @@ export default function Scan() {
         />
       )}
 
-      {/* Add barcode food dialog */}
       <Dialog open={!!barcodeItem} onOpenChange={(o) => !o && setBarcodeItem(null)}>
         <DialogContent className="max-w-md rounded-3xl p-6">
           {barcodeItem && (
@@ -294,7 +364,6 @@ export default function Scan() {
                 )}
               </DialogHeader>
 
-              {/* Macros preview */}
               <div className="bg-secondary/30 p-4 rounded-2xl my-4 grid grid-cols-4 gap-2 text-center">
                 <div>
                   <p className="text-2xl font-bold">
