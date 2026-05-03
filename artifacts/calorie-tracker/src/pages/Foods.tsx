@@ -36,6 +36,20 @@ function getCategoryEmoji(category: string) {
   return CATEGORIES.find(c => c.value === category.toLowerCase())?.emoji ?? "🍽️";
 }
 
+function normalizeCategory(value: string) {
+  const normalized = value.trim().toLowerCase();
+  if (normalized.includes("fruta")) return "frutas";
+  if (normalized.includes("verdura")) return "verduras";
+  if (normalized.includes("carne") || normalized.includes("pollo") || normalized.includes("cerdo")) return "carnes";
+  if (normalized.includes("pesc")) return "pescados";
+  if (normalized.includes("láct") || normalized.includes("lact")) return "lacteos";
+  if (normalized.includes("cereal") || normalized.includes("pasta") || normalized.includes("arroz") || normalized.includes("pan")) return "cereales";
+  if (normalized.includes("legumb") || normalized.includes("garban") || normalized.includes("lentej")) return "legumbres";
+  if (normalized.includes("bebid") || normalized.includes("agua") || normalized.includes("zumo") || normalized.includes("jugo")) return "bebidas";
+  if (normalized.includes("snack") || normalized.includes("dulc") || normalized.includes("boll") || normalized.includes("postre")) return "snacks";
+  return normalized;
+}
+
 // ─── Quick-add modal (same as before) ────────────────────────────────────────
 
 function QuickAddModal({ food, open, onOpenChange }: { food: Food | null; open: boolean; onOpenChange: (v: boolean) => void }) {
@@ -256,7 +270,7 @@ export default function Foods() {
   // Group by category when not filtering
   const groupedFoods = !isSearching
     ? foods.reduce<Record<string, Food[]>>((acc, food) => {
-        const cat = food.category || "otros";
+        const cat = normalizeCategory(food.category || "otros");
         if (!acc[cat]) acc[cat] = [];
         acc[cat].push(food);
         return acc;

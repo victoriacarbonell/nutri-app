@@ -24,6 +24,20 @@ const FOOD_EMOJIS = [
   "🍰","🎂","🍮","🍭","🍫","🍩","🍪","🧁","🍿","🥨",
 ];
 
+function normalizeCategory(value: string) {
+  const normalized = value.trim().toLowerCase();
+  if (normalized.includes("fruta")) return "frutas";
+  if (normalized.includes("verdura")) return "verduras";
+  if (normalized.includes("carne") || normalized.includes("pollo") || normalized.includes("cerdo")) return "carnes";
+  if (normalized.includes("pesc")) return "pescados";
+  if (normalized.includes("láct") || normalized.includes("lact")) return "lacteos";
+  if (normalized.includes("cereal") || normalized.includes("pasta") || normalized.includes("arroz") || normalized.includes("pan")) return "cereales";
+  if (normalized.includes("legumb") || normalized.includes("garban") || normalized.includes("lentej")) return "legumbres";
+  if (normalized.includes("bebid") || normalized.includes("agua") || normalized.includes("zumo") || normalized.includes("jugo")) return "bebidas";
+  if (normalized.includes("snack") || normalized.includes("dulc") || normalized.includes("boll") || normalized.includes("postre")) return "snacks";
+  return normalized;
+}
+
 const CATEGORIES = [
   { value: "frutas",    label: "🍎 Frutas" },
   { value: "verduras",  label: "🥦 Verduras" },
@@ -80,7 +94,7 @@ export default function CreateFoodModal({ open, onOpenChange }: CreateFoodModalP
 
   const onSubmit = (data: FoodFormValues) => {
     createFood.mutate(
-      { data: { ...data, photoUrl: selectedEmoji ?? data.photoUrl ?? null } },
+      { data: { ...data, category: normalizeCategory(data.category), photoUrl: selectedEmoji ?? data.photoUrl ?? null } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetFoodsQueryKey() });
