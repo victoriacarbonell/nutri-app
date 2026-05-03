@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { BrowserMultiFormatReader } from "@zxing/browser";
 import { DecodeHintType, BarcodeFormat, NotFoundException } from "@zxing/library";
-import { Loader2, ScanLine, X, RefreshCw } from "lucide-react";
+import { Loader2, ScanLine, X, RefreshCw, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export interface OffProductInfo {
@@ -121,7 +121,6 @@ export default function BarcodeScanner({ onResult, onClose }: BarcodeScannerProp
               setState("not_found");
             }
           } else if (err && !(err instanceof NotFoundException)) {
-            // ignore normal scan misses
           }
         }
       );
@@ -163,13 +162,18 @@ export default function BarcodeScanner({ onResult, onClose }: BarcodeScannerProp
         {state === "idle" && (
           <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center gap-4 px-8">
             <div className="w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
-              <ScanLine size={32} className="text-green-400" />
+              <Smartphone size={30} className="text-green-400" />
             </div>
             <p className="text-white font-semibold text-center">Pulsa para activar la cámara</p>
-            <p className="text-white/60 text-sm text-center">iPhone requiere un toque para abrir la cámara.</p>
+            <p className="text-white/60 text-sm text-center max-w-xs">
+              En iPhone debes tocar un botón antes de permitir la cámara.
+            </p>
             <Button className="mt-2 bg-green-500 hover:bg-green-600 text-white rounded-2xl h-12 px-8" onClick={startScanning}>
               Abrir escáner
             </Button>
+            <p className="text-white/45 text-xs text-center max-w-xs">
+              Si Safari te pregunta permiso, pulsa “Permitir” y vuelve a intentarlo.
+            </p>
           </div>
         )}
 
