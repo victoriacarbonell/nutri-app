@@ -42,12 +42,22 @@ function normalizeCategory(value: string) {
   if (normalized.includes("verdura")) return "verduras";
   if (normalized.includes("carne") || normalized.includes("pollo") || normalized.includes("cerdo")) return "carnes";
   if (normalized.includes("pesc")) return "pescados";
+  if (normalized.includes("huevo")) return "huevos";
+  if (normalized.includes("aceit") || normalized.includes("grasa") || normalized.includes("mante")) return "aceites y grasas";
+  if (normalized.includes("fruto seco") || normalized.includes("almendra") || normalized.includes("nuez") || normalized.includes("avellana")) return "frutos secos";
   if (normalized.includes("láct") || normalized.includes("lact")) return "lacteos";
   if (normalized.includes("cereal") || normalized.includes("pasta") || normalized.includes("arroz") || normalized.includes("pan")) return "cereales";
   if (normalized.includes("legumb") || normalized.includes("garban") || normalized.includes("lentej")) return "legumbres";
   if (normalized.includes("bebid") || normalized.includes("agua") || normalized.includes("zumo") || normalized.includes("jugo")) return "bebidas";
   if (normalized.includes("snack") || normalized.includes("dulc") || normalized.includes("boll") || normalized.includes("postre")) return "snacks";
   return normalized;
+}
+
+function inferCategory(food: Food) {
+  const fromCategory = normalizeCategory(food.category || "");
+  if (fromCategory && fromCategory !== "otros") return fromCategory;
+  const name = `${food.name} ${food.brand ?? ""}`.toLowerCase();
+  return normalizeCategory(name);
 }
 
 // ─── Quick-add modal (same as before) ────────────────────────────────────────
@@ -270,7 +280,7 @@ export default function Foods() {
   // Group by category when not filtering
   const groupedFoods = !isSearching
     ? foods.reduce<Record<string, Food[]>>((acc, food) => {
-        const cat = normalizeCategory(food.category || "otros");
+        const cat = inferCategory(food) || "otros";
         if (!acc[cat]) acc[cat] = [];
         acc[cat].push(food);
         return acc;
