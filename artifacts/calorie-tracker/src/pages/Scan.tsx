@@ -36,6 +36,7 @@ export default function Scan() {
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [barcodeItem, setBarcodeItem] = useState<AddBarcodeItemState | null>(null);
+  const [isSavingAnalysis, setIsSavingAnalysis] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -67,6 +68,7 @@ export default function Scan() {
     setAnalysisResult(null);
     setAnalysisMealType("almuerzo");
     setAnalysisAmount("100");
+    setIsSavingAnalysis(false);
   };
 
   const handleBarcodeResult = (product: OffProductInfo) => {
@@ -74,12 +76,13 @@ export default function Scan() {
   };
 
   const handleAddAnalysisFood = () => {
-    if (!analysisResult) return;
+    if (!analysisResult || isSavingAnalysis) return;
 
     const today = format(new Date(), "yyyy-MM-dd");
     const grams = parseFloat(analysisAmount) || 100;
     const mealType = analysisMealType;
     const data = analysisResult.items[0];
+    setIsSavingAnalysis(true);
 
     createFood.mutate(
       {
@@ -108,14 +111,19 @@ export default function Scan() {
                 setAnalysisResult(null);
                 setAnalysisMealType("almuerzo");
                 setAnalysisAmount("100");
+                setIsSavingAnalysis(false);
               },
-              onError: () =>
-                toast({ title: "Error", description: "No se pudo registrar en el diario.", variant: "destructive" }),
+              onError: () => {
+                setIsSavingAnalysis(false);
+                toast({ title: "Error", description: "No se pudo registrar en el diario.", variant: "destructive" });
+              },
             }
           );
         },
-        onError: () =>
-          toast({ title: "Error", description: "No se pudo guardar el alimento.", variant: "destructive" }),
+        onError: () => {
+          setIsSavingAnalysis(false);
+          toast({ title: "Error", description: "No se pudo guardar el alimento.", variant: "destructive" });
+        },
       }
     );
   };
@@ -161,7 +169,7 @@ export default function Scan() {
     );
   };
 
-  const isSaving = createFood.isPending || createLogEntry.isPending;
+  const isSaving = createFood.isPending || createLogEntry.isPending || isSavingAnalysis;
 
   return (
     <div className="min-h-[100dvh] bg-background pt-8 px-4 pb-24 flex flex-col">
@@ -305,12 +313,12 @@ export default function Scan() {
                   )}
 
                   <div className="grid grid-cols-2 gap-3 mt-auto">
-                    <Button variant="outline" className="rounded-xl h-12" onClick={resetAI}>
+                    <Button variant="outline" className="rounded-xl h-12" onClick={resetAI} disabled={isSaving}>
                       Descartar
                     </Button>
                     <Button className="rounded-xl h-12" onClick={handleAddAnalysisFood} disabled={isSaving || analyzeImage.isPending}>
                       {isSaving && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                      Añadir a comida
+                      {isSaving ? "Guardando..." : "Añadir a comida"}
                     </Button>
                   </div>
                 </div>
