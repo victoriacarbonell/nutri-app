@@ -1,6 +1,10 @@
 # NutriApp 🥗
 
+> 🚧 **Proyecto en curso.** La app funciona en el entorno de desarrollo de Replit, pero todavía no está publicada. Sigo usando este código como base para mejorarla.
+
 Aplicación móvil progresiva (PWA) para el seguimiento de calorías y nutrición, diseñada para iPhone y Android. Interfaz completamente en español con paleta de colores pastel y navegación optimizada para pantallas táctiles.
+
+Desarrollada con ayuda del agente de IA de Replit: yo definí las funcionalidades, revisé el resultado y fui iterando sobre él.
 
 ## Características
 
@@ -69,11 +73,15 @@ pnpm --filter @workspace/api-spec run codegen
 | `SESSION_SECRET` | Secreto para sesiones Express |
 | `OPENAI_API_KEY` | Clave API de OpenAI (gestionada por Replit) |
 
-## Despliegue
+## Estado y despliegue
 
-La app está desplegada como PWA en Replit. Puedes abrirla desde el navegador de tu móvil y añadirla a la pantalla de inicio para usarla como una app nativa.
+La app se ejecuta en el entorno de desarrollo de Replit, con la base de datos PostgreSQL alojada también en Replit. Todavía no tiene una versión publicada.
 
-La base de datos PostgreSQL está alojada en Replit (1 GB incluido en el plan gratuito).
+## Próximos pasos
+
+- [ ] Publicar la app como PWA
+- [ ] Limitar el uso del análisis con IA para controlar el coste de la API de OpenAI
+<!-- Añade aquí las mejoras que tengas pensadas -->
 
 ## Rutas de la API
 
