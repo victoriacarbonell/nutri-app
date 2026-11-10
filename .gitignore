@@ -47,3 +47,6 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Capturas adjuntadas al agente de Replit
+attached_assets/
