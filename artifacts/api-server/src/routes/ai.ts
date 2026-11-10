@@ -2,7 +2,7 @@ import { Router } from "express";
 import { openai } from "@workspace/integrations-openai-ai-server";
 import { db } from "@workspace/db";
 import { logEntriesTable, exercisesTable, userProfileTable, weightLogsTable } from "@workspace/db";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { eq, and, gte, lte, sql, asc } from "drizzle-orm";
 import { AnalyzeImageBody } from "@workspace/api-zod";
 
 const router = Router();
@@ -90,7 +90,8 @@ async function getRecentData(daysBack: number) {
       .where(and(gte(exercisesTable.date, startDate), lte(exercisesTable.date, endDate))),
     db.select().from(userProfileTable).limit(1),
     db.select().from(weightLogsTable)
-      .where(and(gte(weightLogsTable.date, startDate), lte(weightLogsTable.date, endDate))),
+      .where(and(gte(weightLogsTable.date, startDate), lte(weightLogsTable.date, endDate)))
+      .orderBy(asc(weightLogsTable.date)),
   ]);
 
   return { entries, exercises, profile: profile[0], weights, startDate, endDate };
