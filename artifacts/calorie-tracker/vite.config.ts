@@ -4,27 +4,17 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-const rawPort = process.env.PORT;
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
-}
-
-const port = Number(rawPort);
+// Valores por defecto para desarrollo local; se pueden sobrescribir por entorno.
+const port = Number(process.env.WEB_PORT ?? process.env.PORT ?? 5173);
 
 if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
+  throw new Error(`Invalid port value: "${process.env.WEB_PORT ?? process.env.PORT}"`);
 }
 
-const basePath = process.env.BASE_PATH;
+const basePath = process.env.BASE_PATH ?? "/";
 
-if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
-}
+// El front llama a /api con ruta relativa; en local lo redirigimos al API.
+const apiTarget = process.env.API_URL ?? "http://localhost:8080";
 
 export default defineConfig({
   base: basePath,
@@ -66,10 +56,16 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    proxy: {
+      "/api": { target: apiTarget, changeOrigin: true },
+    },
   },
   preview: {
     port,
     host: "0.0.0.0",
     allowedHosts: true,
+    proxy: {
+      "/api": { target: apiTarget, changeOrigin: true },
+    },
   },
 });
