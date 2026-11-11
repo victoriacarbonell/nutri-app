@@ -16,49 +16,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-
-// ─── Category config ──────────────────────────────────────────────────────────
-
-const CATEGORIES = [
-  { value: "frutas",    label: "Frutas",    emoji: "🍎" },
-  { value: "verduras",  label: "Verduras",  emoji: "🥦" },
-  { value: "carnes",    label: "Carnes",    emoji: "🥩" },
-  { value: "pescados",  label: "Pescados",  emoji: "🐟" },
-  { value: "lacteos",   label: "Lácteos",   emoji: "🥛" },
-  { value: "cereales",  label: "Cereales",  emoji: "🌾" },
-  { value: "legumbres", label: "Legumbres", emoji: "🫘" },
-  { value: "bebidas",   label: "Bebidas",   emoji: "🧃" },
-  { value: "snacks",    label: "Snacks",    emoji: "🍿" },
-  { value: "otros",     label: "Otros",     emoji: "🍽️" },
-];
-
-function getCategoryEmoji(category: string) {
-  return CATEGORIES.find(c => c.value === category.toLowerCase())?.emoji ?? "🍽️";
-}
-
-function normalizeCategory(value: string) {
-  const normalized = value.trim().toLowerCase();
-  if (normalized.includes("fruta")) return "frutas";
-  if (normalized.includes("verdura")) return "verduras";
-  if (normalized.includes("carne") || normalized.includes("pollo") || normalized.includes("cerdo")) return "carnes";
-  if (normalized.includes("pesc")) return "pescados";
-  if (normalized.includes("huevo")) return "huevos";
-  if (normalized.includes("aceit") || normalized.includes("grasa") || normalized.includes("mante")) return "aceites y grasas";
-  if (normalized.includes("fruto seco") || normalized.includes("almendra") || normalized.includes("nuez") || normalized.includes("avellana")) return "frutos secos";
-  if (normalized.includes("láct") || normalized.includes("lact")) return "lacteos";
-  if (normalized.includes("cereal") || normalized.includes("pasta") || normalized.includes("arroz") || normalized.includes("pan")) return "cereales";
-  if (normalized.includes("legumb") || normalized.includes("garban") || normalized.includes("lentej")) return "legumbres";
-  if (normalized.includes("bebid") || normalized.includes("agua") || normalized.includes("zumo") || normalized.includes("jugo")) return "bebidas";
-  if (normalized.includes("snack") || normalized.includes("dulc") || normalized.includes("boll") || normalized.includes("postre")) return "snacks";
-  return normalized;
-}
-
-function inferCategory(food: Food) {
-  const fromCategory = normalizeCategory(food.category || "");
-  if (fromCategory && fromCategory !== "otros") return fromCategory;
-  const name = `${food.name} ${food.brand ?? ""}`.toLowerCase();
-  return normalizeCategory(name);
-}
+import { FOOD_CATEGORIES, getCategoryEmoji, inferCategory } from "@workspace/shared";
 
 // ─── Quick-add modal (same as before) ────────────────────────────────────────
 
@@ -230,7 +188,7 @@ function CategoryChips({ selected, onChange }: { selected: string | null; onChan
       >
         Todos
       </button>
-      {CATEGORIES.map(cat => (
+      {FOOD_CATEGORIES.map(cat => (
         <button
           key={cat.value}
           onClick={() => onChange(cat.value === selected ? null : cat.value)}
@@ -289,7 +247,7 @@ export default function Foods() {
 
   const sortedCategories = groupedFoods
     ? Object.keys(groupedFoods).sort((a, b) => {
-        const order = CATEGORIES.map(c => c.value);
+        const order = FOOD_CATEGORIES.map(c => c.value);
         return (order.indexOf(a) ?? 99) - (order.indexOf(b) ?? 99);
       })
     : [];
@@ -358,7 +316,7 @@ export default function Foods() {
         /* Grouped by category when browsing */
         <div className="space-y-6">
           {sortedCategories.map(cat => {
-            const catInfo = CATEGORIES.find(c => c.value === cat);
+            const catInfo = FOOD_CATEGORIES.find(c => c.value === cat);
             const items = groupedFoods[cat];
             return (
               <div key={cat}>

@@ -3,7 +3,12 @@ import { openai as openaiClient, AI_MODEL } from "@workspace/integrations-openai
 import { db } from "@workspace/db";
 import { logEntriesTable, exercisesTable, userProfileTable, weightLogsTable } from "@workspace/db";
 import { eq, and, gte, lte, sql, asc } from "drizzle-orm";
-import { AnalyzeImageBody } from "@workspace/api-zod";
+import {
+  AnalyzeImageBody,
+  GetAiWeeklySummaryQueryParams,
+  GetAiMonthlySummaryQueryParams,
+} from "@workspace/api-zod";
+import { addDays, resolveDate } from "../lib/dates";
 
 const router = Router();
 
@@ -85,12 +90,9 @@ Be realistic with portion sizes. If the image is unclear, use "low" confidence.`
   }
 });
 
-async function getRecentData(daysBack: number) {
-  const end = new Date();
-  const start = new Date();
-  start.setDate(start.getDate() - daysBack);
-  const startDate = start.toISOString().slice(0, 10);
-  const endDate = end.toISOString().slice(0, 10);
+// Datos de los ultimos `daysBack` dias hasta `endDate` incluido.
+async function getRecentData(daysBack: number, endDate: string) {
+  const startDate = addDays(endDate, -daysBack);
 
   const [entries, exercises, profile, weights] = await Promise.all([
     db.select({
@@ -114,7 +116,8 @@ async function getRecentData(daysBack: number) {
 }
 
 router.get("/weekly-summary", async (req, res) => {
-  const { entries, exercises, profile, weights, startDate, endDate } = await getRecentData(7);
+  const params = GetAiWeeklySummaryQueryParams.parse(req.query);
+  const { entries, exercises, profile, weights, startDate, endDate } = await getRecentData(7, resolveDate(params.date));
 
   const avgCalories = entries.length ? entries.reduce((s, e) => s + Number(e.calories), 0) / entries.length : 0;
   const totalExercise = exercises.reduce((s, e) => s + e.caloriesBurned, 0);
@@ -184,7 +187,8 @@ Responde en formato JSON:
 });
 
 router.get("/monthly-summary", async (req, res) => {
-  const { entries, exercises, profile, weights, startDate, endDate } = await getRecentData(30);
+  const params = GetAiMonthlySummaryQueryParams.parse(req.query);
+  const { entries, exercises, profile, weights, startDate, endDate } = await getRecentData(30, resolveDate(params.date));
 
   const avgCalories = entries.length ? entries.reduce((s, e) => s + Number(e.calories), 0) / entries.length : 0;
   const totalExercise = exercises.reduce((s, e) => s + e.caloriesBurned, 0);

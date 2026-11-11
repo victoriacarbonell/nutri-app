@@ -7,6 +7,7 @@ import { Sparkles, RefreshCw, Lightbulb, Target, Star, TrendingUp, Calendar } fr
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 
 type Period = "weekly" | "monthly";
 
@@ -25,11 +26,13 @@ function ScoreBadge({ score }: { score?: number | null }) {
 }
 
 function SummaryCard({ period }: { period: Period }) {
-  const weekly = useGetAiWeeklySummary({
-    query: { queryKey: getGetAiWeeklySummaryQueryKey(), enabled: period === "weekly", staleTime: 5 * 60 * 1000 },
+  // Fecha local del cliente: el periodo termina en el "hoy" del usuario.
+  const params = { date: format(new Date(), "yyyy-MM-dd") };
+  const weekly = useGetAiWeeklySummary(params, {
+    query: { queryKey: getGetAiWeeklySummaryQueryKey(params), enabled: period === "weekly", staleTime: 5 * 60 * 1000 },
   });
-  const monthly = useGetAiMonthlySummary({
-    query: { queryKey: getGetAiMonthlySummaryQueryKey(), enabled: period === "monthly", staleTime: 5 * 60 * 1000 },
+  const monthly = useGetAiMonthlySummary(params, {
+    query: { queryKey: getGetAiMonthlySummaryQueryKey(params), enabled: period === "monthly", staleTime: 5 * 60 * 1000 },
   });
 
   const { data, isLoading, isFetching, refetch } = period === "weekly" ? weekly : monthly;
