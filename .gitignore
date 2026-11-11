@@ -50,3 +50,8 @@ Thumbs.db
 
 # Capturas adjuntadas al agente de Replit
 attached_assets/
+
+# Variables de entorno locales
+.env
+.env.*
+!.env.example

@@ -1,6 +1,6 @@
 # NutriApp 🥗
 
-> 🚧 **Proyecto en curso.** La app funciona en el entorno de desarrollo de Replit, pero todavía no está publicada. Sigo usando este código como base para mejorarla.
+> 🚧 **Proyecto en curso.** La app nació en Replit y ahora se desarrolla en local. Todavía no está publicada.
 
 Aplicación móvil progresiva (PWA) para el seguimiento de calorías y nutrición, diseñada para iPhone y Android. Interfaz completamente en español con paleta de colores pastel y navegación optimizada para pantallas táctiles.
 
@@ -49,19 +49,29 @@ Desarrollada con ayuda del agente de IA de Replit: yo definí las funcionalidade
 
 ## Desarrollo local
 
-Requiere Node.js 20+ y pnpm 9+.
+Requiere Node.js 22.9+, pnpm 10+ y PostgreSQL 16 (con Docker basta `pnpm db:up`).
 
 ```bash
-# Instalar dependencias
+# 1. Instalar dependencias
 pnpm install
 
-# Iniciar frontend (puerto asignado por Replit)
-pnpm --filter @workspace/calorie-tracker run dev
+# 2. Configurar el entorno
+cp .env.example .env        # en PowerShell: Copy-Item .env.example .env
 
-# Iniciar backend
-pnpm --filter @workspace/api-server run dev
+# 3. Base de datos: arrancar PostgreSQL y crear las tablas
+pnpm db:up
+pnpm db:push
 
-# Regenerar cliente API tras cambios en OpenAPI spec
+# 4. Arrancar API y front, cada uno en una terminal
+pnpm dev:api                # http://localhost:8080
+pnpm dev:web                # http://localhost:5173
+```
+
+El front llama a `/api` y Vite lo redirige al API (`API_URL`, por defecto `http://localhost:8080`).
+
+Tras cambiar la especificación OpenAPI:
+
+```bash
 pnpm --filter @workspace/api-spec run codegen
 ```
 
@@ -69,13 +79,14 @@ pnpm --filter @workspace/api-spec run codegen
 
 | Variable | Descripción |
 |----------|-------------|
-| `DATABASE_URL` | Cadena de conexión PostgreSQL |
-| `SESSION_SECRET` | Secreto para sesiones Express |
-| `OPENAI_API_KEY` | Clave API de OpenAI (gestionada por Replit) |
+| `DATABASE_URL` | Cadena de conexión PostgreSQL (obligatoria) |
+| `PORT` | Puerto del API (por defecto 8080) |
+| `OPENAI_API_KEY` | Clave de OpenAI. Opcional: sin ella, las funciones de IA responden 503 |
+| `OPENAI_MODEL` | Modelo de OpenAI (por defecto `gpt-5.1`) |
 
 ## Estado y despliegue
 
-La app se ejecuta en el entorno de desarrollo de Replit, con la base de datos PostgreSQL alojada también en Replit. Todavía no tiene una versión publicada.
+La app se ejecuta en local, con PostgreSQL en Docker. Todavía no tiene una versión publicada.
 
 ## Próximos pasos
 
