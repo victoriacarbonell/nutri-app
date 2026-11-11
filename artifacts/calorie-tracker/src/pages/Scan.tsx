@@ -1,12 +1,16 @@
 import { useState, useRef } from "react";
 import {
   Camera, Image as ImageIcon, Loader2, Info,
-  ScanBarcode, Sparkles, X, ChevronDown,
+  ScanBarcode, Sparkles, X, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useAnalyzeImage, useCreateFood, useCreateLogEntry, getGetDayLogQueryKey, getGetTodaySummaryQueryKey } from "@workspace/api-client-react";
+import {
+  useAnalyzeImage, useCreateFood, useCreateLogEntry, getFoods,
+  getGetDayLogQueryKey, getGetTodaySummaryQueryKey, getGetFoodsQueryKey,
+} from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import type { FoodAnalysisResult } from "@workspace/api-client-react";
+import { inferCategory } from "@workspace/shared";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -18,10 +22,60 @@ import type { OffProductInfo } from "@/components/BarcodeScanner";
 
 type Mode = "ai" | "barcode";
 
+const MEAL_TYPES = [
+  { value: "desayuno", label: "Desayuno" },
+  { value: "almuerzo", label: "Almuerzo" },
+  { value: "comida", label: "Comida" },
+  { value: "merienda", label: "Merienda" },
+  { value: "cena", label: "Cena" },
+  { value: "snacks", label: "Snacks" },
+] as const;
+
+type MealType = (typeof MEAL_TYPES)[number]["value"];
+
+// Cada alimento detectado por la IA, con los gramos editables por el usuario.
+interface AnalyzedItemState {
+  name: string;
+  grams: string;
+  caloriesPer100g: number;
+  proteinPer100g: number;
+  carbsPer100g: number;
+  fatPer100g: number;
+}
+
 interface AddBarcodeItemState {
   product: OffProductInfo;
   amount: string;
-  mealType: string;
+  mealType: MealType;
+}
+
+function itemTotals(items: AnalyzedItemState[]) {
+  return items.reduce(
+    (acc, item) => {
+      const factor = (parseFloat(item.grams) || 0) / 100;
+      acc.calories += item.caloriesPer100g * factor;
+      acc.protein += item.proteinPer100g * factor;
+      acc.carbs += item.carbsPer100g * factor;
+      acc.fat += item.fatPer100g * factor;
+      return acc;
+    },
+    { calories: 0, protein: 0, carbs: 0, fat: 0 },
+  );
+}
+
+function MealTypeSelect({ value, onChange, className }: { value: MealType; onChange: (v: MealType) => void; className?: string }) {
+  return (
+    <Select value={value} onValueChange={(v) => onChange(v as MealType)}>
+      <SelectTrigger className={className}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {MEAL_TYPES.map((m) => (
+          <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
 }
 
 export default function Scan() {
@@ -30,19 +84,25 @@ export default function Scan() {
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<FoodAnalysisResult | null>(null);
-  const [analysisMealType, setAnalysisMealType] = useState("almuerzo");
-  const [analysisAmount, setAnalysisAmount] = useState("100");
+  const [analysisItems, setAnalysisItems] = useState<AnalyzedItemState[]>([]);
+  const [analysisMealType, setAnalysisMealType] = useState<MealType>("almuerzo");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [barcodeItem, setBarcodeItem] = useState<AddBarcodeItemState | null>(null);
-  const [isSavingAnalysis, setIsSavingAnalysis] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const analyzeImage = useAnalyzeImage();
   const createFood = useCreateFood();
   const createLogEntry = useCreateLogEntry();
+
+  const invalidateDay = (date: string) => {
+    queryClient.invalidateQueries({ queryKey: getGetDayLogQueryKey(date) });
+    queryClient.invalidateQueries({ queryKey: getGetTodaySummaryQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetFoodsQueryKey() });
+  };
 
   const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -51,125 +111,150 @@ export default function Scan() {
     reader.onloadend = () => {
       const base64String = reader.result as string;
       setImagePreview(base64String);
+      setAnalysisResult(null);
+      setAnalysisItems([]);
       analyzeImage.mutate(
         { data: { imageBase64: base64String.split(",")[1] } },
         {
-          onSuccess: (result) => setAnalysisResult(result as FoodAnalysisResult),
+          onSuccess: (result) => {
+            setAnalysisResult(result);
+            setAnalysisItems(
+              result.items.map((item) => ({
+                name: item.name,
+                grams: String(Math.round(item.estimatedGrams)),
+                caloriesPer100g: item.caloriesPer100g,
+                proteinPer100g: item.proteinPer100g,
+                carbsPer100g: item.carbsPer100g,
+                fatPer100g: item.fatPer100g,
+              })),
+            );
+          },
           onError: () =>
             toast({ title: "Error al analizar", description: "No pudimos analizar la imagen. Intenta de nuevo.", variant: "destructive" }),
         }
       );
     };
     reader.readAsDataURL(file);
+    // Permite volver a seleccionar la misma foto.
+    e.target.value = "";
   };
 
   const resetAI = () => {
     setImagePreview(null);
     setAnalysisResult(null);
+    setAnalysisItems([]);
     setAnalysisMealType("almuerzo");
-    setAnalysisAmount("100");
-    setIsSavingAnalysis(false);
+    setIsSaving(false);
+  };
+
+  const updateItemGrams = (index: number, grams: string) => {
+    setAnalysisItems((items) => items.map((item, i) => (i === index ? { ...item, grams } : item)));
+  };
+
+  const removeItem = (index: number) => {
+    setAnalysisItems((items) => items.filter((_, i) => i !== index));
+  };
+
+  // Guarda cada alimento detectado como un alimento propio y lo añade al
+  // diario con sus gramos. La foto no se guarda: en base64 pesa cientos de KB
+  // por alimento y acabaría en la base de datos.
+  const handleAddAnalysisFoods = async () => {
+    if (isSaving) return;
+    const today = format(new Date(), "yyyy-MM-dd");
+    const items = analysisItems.filter((item) => (parseFloat(item.grams) || 0) > 0);
+    if (items.length === 0) {
+      toast({ title: "Nada que añadir", description: "Indica los gramos de al menos un alimento.", variant: "destructive" });
+      return;
+    }
+
+    setIsSaving(true);
+    let saved = 0;
+    try {
+      for (const item of items) {
+        const food = await createFood.mutateAsync({
+          data: {
+            name: item.name,
+            category: inferCategory({ name: item.name }),
+            caloriesPer100g: item.caloriesPer100g,
+            proteinPer100g: item.proteinPer100g,
+            carbsPer100g: item.carbsPer100g,
+            fatPer100g: item.fatPer100g,
+            unit: "g",
+            photoUrl: null,
+          },
+        });
+        await createLogEntry.mutateAsync({
+          date: today,
+          data: { mealType: analysisMealType, foodId: food.id, amountGrams: parseFloat(item.grams) },
+        });
+        saved++;
+      }
+      invalidateDay(today);
+      toast({
+        title: "¡Añadido!",
+        description: `${saved} ${saved === 1 ? "alimento añadido" : "alimentos añadidos"} a ${analysisMealType}.`,
+      });
+      resetAI();
+    } catch {
+      invalidateDay(today);
+      setIsSaving(false);
+      toast({
+        title: "Error",
+        description: saved > 0
+          ? `Se añadieron ${saved} de ${items.length} alimentos. Revisa el diario.`
+          : "No se pudo guardar el alimento.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleBarcodeResult = (product: OffProductInfo) => {
     setBarcodeItem({ product, amount: "100", mealType: "almuerzo" });
   };
 
-  const handleAddAnalysisFood = () => {
-    if (!analysisResult || isSavingAnalysis) return;
-
-    const today = format(new Date(), "yyyy-MM-dd");
-    const grams = parseFloat(analysisAmount) || 100;
-    const mealType = analysisMealType;
-    const data = analysisResult.items[0];
-    setIsSavingAnalysis(true);
-
-    createFood.mutate(
-      {
-        data: {
-          name: analysisResult.description || data?.name || "Comida analizada",
-          category: "otros",
-          caloriesPer100g: data?.caloriesPer100g ?? Math.round((analysisResult.totalCalories || 0) / Math.max(grams / 100, 1)),
-          proteinPer100g: data?.proteinPer100g ?? analysisResult.totalProtein ?? 0,
-          carbsPer100g: data?.carbsPer100g ?? analysisResult.totalCarbs ?? 0,
-          fatPer100g: data?.fatPer100g ?? analysisResult.totalFat ?? 0,
-          fiberPer100g: 0,
-          unit: "g",
-          photoUrl: imagePreview,
-        },
-      },
-      {
-        onSuccess: (food) => {
-          createLogEntry.mutate(
-            { date: today, data: { mealType: mealType as any, foodId: food.id, amountGrams: grams } },
-            {
-              onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: getGetDayLogQueryKey(today) });
-                queryClient.invalidateQueries({ queryKey: getGetTodaySummaryQueryKey() });
-                toast({ title: "¡Añadido!", description: `${analysisResult.description || "Comida"} guardada y añadida a ${mealType}.` });
-                setImagePreview(null);
-                setAnalysisResult(null);
-                setAnalysisMealType("almuerzo");
-                setAnalysisAmount("100");
-                setIsSavingAnalysis(false);
-              },
-              onError: () => {
-                setIsSavingAnalysis(false);
-                toast({ title: "Error", description: "No se pudo registrar en el diario.", variant: "destructive" });
-              },
-            }
-          );
-        },
-        onError: () => {
-          setIsSavingAnalysis(false);
-          toast({ title: "Error", description: "No se pudo guardar el alimento.", variant: "destructive" });
-        },
-      }
-    );
-  };
-
+  // Si el producto ya existe (mismo código de barras) se reutiliza en vez de
+  // crear un duplicado en cada escaneo.
   const handleAddBarcodeFood = async () => {
-    if (!barcodeItem) return;
+    if (!barcodeItem || isSaving) return;
     const today = format(new Date(), "yyyy-MM-dd");
     const { product, amount, mealType } = barcodeItem;
+    setIsSaving(true);
 
-    createFood.mutate(
-      {
-        data: {
-          name: product.name,
-          brand: product.brand || undefined,
-          barcode: product.barcode,
-          category: product.category,
-          caloriesPer100g: product.caloriesPer100g,
-          proteinPer100g: product.proteinPer100g,
-          carbsPer100g: product.carbsPer100g,
-          fatPer100g: product.fatPer100g,
-          fiberPer100g: product.fiberPer100g ?? undefined,
-        },
-      },
-      {
-        onSuccess: (food) => {
-          createLogEntry.mutate(
-            { date: today, data: { mealType: mealType as any, foodId: food.id, amountGrams: parseFloat(amount) || 100 } },
-            {
-              onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: getGetDayLogQueryKey(today) });
-                queryClient.invalidateQueries({ queryKey: getGetTodaySummaryQueryKey() });
-                toast({ title: "¡Añadido!", description: `${product.name} guardado y añadido a ${mealType}.` });
-                setBarcodeItem(null);
-              },
-              onError: () =>
-                toast({ title: "Error", description: "No se pudo registrar en el diario.", variant: "destructive" }),
-            }
-          );
-        },
-        onError: () =>
-          toast({ title: "Error", description: "No se pudo guardar el alimento.", variant: "destructive" }),
+    try {
+      const existing = await getFoods({ barcode: product.barcode, limit: 1 });
+      let foodId = existing.foods[0]?.id;
+      if (!foodId) {
+        const food = await createFood.mutateAsync({
+          data: {
+            name: product.name,
+            brand: product.brand || undefined,
+            barcode: product.barcode,
+            category: inferCategory({ name: product.name, brand: product.brand, category: product.category }),
+            caloriesPer100g: product.caloriesPer100g,
+            proteinPer100g: product.proteinPer100g,
+            carbsPer100g: product.carbsPer100g,
+            fatPer100g: product.fatPer100g,
+            fiberPer100g: product.fiberPer100g ?? undefined,
+            photoUrl: product.imageUrl,
+          },
+        });
+        foodId = food.id;
       }
-    );
+      await createLogEntry.mutateAsync({
+        date: today,
+        data: { mealType, foodId, amountGrams: parseFloat(amount) || 100 },
+      });
+      invalidateDay(today);
+      toast({ title: "¡Añadido!", description: `${product.name} añadido a ${mealType}.` });
+      setBarcodeItem(null);
+    } catch {
+      toast({ title: "Error", description: "No se pudo registrar en el diario.", variant: "destructive" });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const isSaving = createFood.isPending || createLogEntry.isPending || isSavingAnalysis;
+  const totals = itemTotals(analysisItems);
 
   return (
     <div className="min-h-[100dvh] bg-background pt-8 px-4 pb-24 flex flex-col">
@@ -250,59 +335,64 @@ export default function Scan() {
                   <h2 className="font-serif text-xl mb-1">{analysisResult.description || "Comida detectada"}</h2>
                   <div className="flex justify-between items-center py-4 border-b border-border/50 mb-4">
                     <div className="text-center">
-                      <span className="block text-3xl font-bold">{analysisResult.totalCalories}</span>
+                      <span className="block text-3xl font-bold">{Math.round(totals.calories)}</span>
                       <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Kcal Totales</span>
                     </div>
                     <div className="flex gap-4 text-center">
                       <div>
-                        <span className="block font-semibold text-chart-1">{analysisResult.totalProtein}g</span>
+                        <span className="block font-semibold text-chart-1">{Math.round(totals.protein)}g</span>
                         <span className="text-[10px] text-muted-foreground uppercase">Prot</span>
                       </div>
                       <div>
-                        <span className="block font-semibold text-chart-3">{analysisResult.totalCarbs}g</span>
+                        <span className="block font-semibold text-chart-3">{Math.round(totals.carbs)}g</span>
                         <span className="text-[10px] text-muted-foreground uppercase">Carb</span>
                       </div>
                       <div>
-                        <span className="block font-semibold text-chart-2">{analysisResult.totalFat}g</span>
+                        <span className="block font-semibold text-chart-2">{Math.round(totals.fat)}g</span>
                         <span className="text-[10px] text-muted-foreground uppercase">Grasa</span>
                       </div>
                     </div>
                   </div>
 
-                  <div className="space-y-3 mb-6">
-                    <h3 className="text-sm font-medium text-muted-foreground">Elementos detectados:</h3>
-                    {analysisResult.items.map((item, i) => (
-                      <div key={i} className="flex justify-between items-center text-sm">
-                        <span>
-                          {item.name}{" "}
-                          <span className="text-muted-foreground">({item.estimatedGrams}g)</span>
-                        </span>
-                        <span className="font-medium">{item.totalCalories} kcal</span>
-                      </div>
-                    ))}
+                  <div className="space-y-2 mb-5">
+                    <h3 className="text-sm font-medium text-muted-foreground">Alimentos detectados (ajusta los gramos):</h3>
+                    {analysisItems.length === 0 && (
+                      <p className="text-sm text-muted-foreground">No queda ningún alimento. Descarta y prueba con otra foto.</p>
+                    )}
+                    {analysisItems.map((item, i) => {
+                      const grams = parseFloat(item.grams) || 0;
+                      return (
+                        <div key={i} className="flex items-center gap-2 text-sm">
+                          <span className="flex-1 min-w-0 truncate">{item.name}</span>
+                          <Input
+                            value={item.grams}
+                            onChange={(e) => updateItemGrams(i, e.target.value)}
+                            className="bg-secondary/30 border-none rounded-xl h-10 w-20 text-center"
+                            type="number"
+                            inputMode="decimal"
+                            aria-label={`Gramos de ${item.name}`}
+                          />
+                          <span className="w-16 text-right font-medium">{Math.round(item.caloriesPer100g * grams / 100)} kcal</span>
+                          <button
+                            type="button"
+                            onClick={() => removeItem(i)}
+                            className="text-muted-foreground hover:text-destructive"
+                            aria-label={`Quitar ${item.name}`}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      );
+                    })}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">Cantidad total (g)</label>
-                      <Input value={analysisAmount} onChange={(e) => setAnalysisAmount(e.target.value)} className="bg-secondary/30 border-none rounded-xl h-12" type="number" />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-1.5 block">Comida</label>
-                      <Select value={analysisMealType} onValueChange={setAnalysisMealType}>
-                        <SelectTrigger className="bg-secondary/30 border-none rounded-xl h-12 text-base">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="desayuno">Desayuno</SelectItem>
-                          <SelectItem value="almuerzo">Almuerzo</SelectItem>
-                          <SelectItem value="comida">Comida</SelectItem>
-                          <SelectItem value="merienda">Merienda</SelectItem>
-                          <SelectItem value="cena">Cena</SelectItem>
-                          <SelectItem value="snacks">Snacks</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                  <div className="mb-4">
+                    <label className="text-sm font-medium mb-1.5 block">Comida</label>
+                    <MealTypeSelect
+                      value={analysisMealType}
+                      onChange={setAnalysisMealType}
+                      className="bg-secondary/30 border-none rounded-xl h-12 text-base"
+                    />
                   </div>
 
                   {analysisResult.notes && (
@@ -316,9 +406,13 @@ export default function Scan() {
                     <Button variant="outline" className="rounded-xl h-12" onClick={resetAI} disabled={isSaving}>
                       Descartar
                     </Button>
-                    <Button className="rounded-xl h-12" onClick={handleAddAnalysisFood} disabled={isSaving || analyzeImage.isPending}>
+                    <Button
+                      className="rounded-xl h-12"
+                      onClick={handleAddAnalysisFoods}
+                      disabled={isSaving || analyzeImage.isPending || analysisItems.length === 0}
+                    >
                       {isSaving && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-                      {isSaving ? "Guardando..." : "Añadir a comida"}
+                      {isSaving ? "Guardando..." : `Añadir ${analysisItems.length > 1 ? `${analysisItems.length} alimentos` : "a comida"}`}
                     </Button>
                   </div>
                 </div>
@@ -403,22 +497,11 @@ export default function Scan() {
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">Comida</label>
-                  <Select
+                  <MealTypeSelect
                     value={barcodeItem.mealType}
-                    onValueChange={(v) => setBarcodeItem({ ...barcodeItem, mealType: v })}
-                  >
-                    <SelectTrigger className="bg-secondary/30 border-none rounded-xl h-14 text-base">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="desayuno">Desayuno</SelectItem>
-                      <SelectItem value="almuerzo">Almuerzo</SelectItem>
-                      <SelectItem value="comida">Comida</SelectItem>
-                      <SelectItem value="merienda">Merienda</SelectItem>
-                      <SelectItem value="cena">Cena</SelectItem>
-                      <SelectItem value="snacks">Snacks</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    onChange={(v) => setBarcodeItem({ ...barcodeItem, mealType: v })}
+                    className="bg-secondary/30 border-none rounded-xl h-14 text-base"
+                  />
                 </div>
               </div>
 

@@ -7,9 +7,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Info } from "lucide-react";
 
 export default function Stats() {
-  const { data: stats, isLoading } = useGetWeeklyStats({
-    query: { queryKey: getGetWeeklyStatsQueryKey() }
-  });
+  // Fecha local del cliente: así "hoy" es el del usuario y no el del servidor.
+  const today = format(new Date(), "yyyy-MM-dd");
+  const { data: stats, isLoading } = useGetWeeklyStats(
+    { date: today },
+    { query: { queryKey: getGetWeeklyStatsQueryKey({ date: today }) } },
+  );
 
   if (isLoading) {
     return (

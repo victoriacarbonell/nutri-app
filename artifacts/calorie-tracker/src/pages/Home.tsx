@@ -16,7 +16,7 @@ export default function Home() {
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const today = format(new Date(), "yyyy-MM-dd");
 
-  const { data: summary, isLoading: isLoadingSummary } = useGetTodaySummary({ query: { queryKey: getGetTodaySummaryQueryKey() } });
+  const { data: summary, isLoading: isLoadingSummary } = useGetTodaySummary({ date: today }, { query: { queryKey: getGetTodaySummaryQueryKey({ date: today }) } });
   const { data: dayLog, isLoading: isLoadingLog } = useGetDayLog(today, { query: { queryKey: getGetDayLogQueryKey(today) } });
 
   const queryClient = useQueryClient();

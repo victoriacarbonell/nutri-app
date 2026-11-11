@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { FOOD_CATEGORIES, normalizeCategory } from "@workspace/shared";
 
 const FOOD_EMOJIS = [
   "🍎","🍌","🍇","🍓","🍊","🍋","🫐","🍒","🥭","🍑",
@@ -22,33 +23,6 @@ const FOOD_EMOJIS = [
   "🫘","🥜","🌰","🧆","🫒","🫚","🧈","🥗","🥘","🍲",
   "🧃","🥤","🧋","☕","🫖","🍵","🍺","🥂","🍷","🧉",
   "🍰","🎂","🍮","🍭","🍫","🍩","🍪","🧁","🍿","🥨",
-];
-
-function normalizeCategory(value: string) {
-  const normalized = value.trim().toLowerCase();
-  if (normalized.includes("fruta")) return "frutas";
-  if (normalized.includes("verdura")) return "verduras";
-  if (normalized.includes("carne") || normalized.includes("pollo") || normalized.includes("cerdo")) return "carnes";
-  if (normalized.includes("pesc")) return "pescados";
-  if (normalized.includes("láct") || normalized.includes("lact")) return "lacteos";
-  if (normalized.includes("cereal") || normalized.includes("pasta") || normalized.includes("arroz") || normalized.includes("pan")) return "cereales";
-  if (normalized.includes("legumb") || normalized.includes("garban") || normalized.includes("lentej")) return "legumbres";
-  if (normalized.includes("bebid") || normalized.includes("agua") || normalized.includes("zumo") || normalized.includes("jugo")) return "bebidas";
-  if (normalized.includes("snack") || normalized.includes("dulc") || normalized.includes("boll") || normalized.includes("postre")) return "snacks";
-  return normalized;
-}
-
-const CATEGORIES = [
-  { value: "frutas",    label: "🍎 Frutas" },
-  { value: "verduras",  label: "🥦 Verduras" },
-  { value: "carnes",    label: "🥩 Carnes" },
-  { value: "pescados",  label: "🐟 Pescados" },
-  { value: "lacteos",   label: "🥛 Lácteos" },
-  { value: "cereales",  label: "🌾 Cereales" },
-  { value: "legumbres", label: "🫘 Legumbres" },
-  { value: "bebidas",   label: "🧃 Bebidas" },
-  { value: "snacks",    label: "🍿 Snacks" },
-  { value: "otros",     label: "🍽️ Otros" },
 ];
 
 const foodSchema = z.object({
@@ -195,8 +169,8 @@ export default function CreateFoodModal({ open, onOpenChange }: CreateFoodModalP
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {CATEGORIES.map(c => (
-                        <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                      {FOOD_CATEGORIES.map(c => (
+                        <SelectItem key={c.value} value={c.value}>{c.emoji} {c.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

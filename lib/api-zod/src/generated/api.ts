@@ -298,12 +298,14 @@ export const CreateRecipeBody = zod.object({
   description: zod.string().nullish(),
   photoUrl: zod.string().nullish(),
   servings: zod.number().default(createRecipeBodyServingsDefault),
-  ingredients: zod.array(
-    zod.object({
-      foodId: zod.number(),
-      amountGrams: zod.number(),
-    }),
-  ),
+  ingredients: zod
+    .array(
+      zod.object({
+        foodId: zod.number(),
+        amountGrams: zod.number(),
+      }),
+    )
+    .min(1),
 });
 
 /**
@@ -375,12 +377,14 @@ export const UpdateRecipeBody = zod.object({
   description: zod.string().nullish(),
   photoUrl: zod.string().nullish(),
   servings: zod.number().default(updateRecipeBodyServingsDefault),
-  ingredients: zod.array(
-    zod.object({
-      foodId: zod.number(),
-      amountGrams: zod.number(),
-    }),
-  ),
+  ingredients: zod
+    .array(
+      zod.object({
+        foodId: zod.number(),
+        amountGrams: zod.number(),
+      }),
+    )
+    .min(1),
 });
 
 export const UpdateRecipeResponse = zod.object({
@@ -688,6 +692,20 @@ export const DeleteWeightLogParams = zod.object({
 /**
  * @summary Get today's calorie and macro summary
  */
+export const getTodaySummaryQueryDateRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+
+export const GetTodaySummaryQueryParams = zod.object({
+  date: zod.coerce
+    .string()
+    .regex(getTodaySummaryQueryDateRegExp)
+    .optional()
+    .describe(
+      "Client's local date (YYYY-MM-DD). Defaults to the server's date.",
+    ),
+});
+
 export const GetTodaySummaryResponse = zod.object({
   date: zod.string(),
   totalCalories: zod.number(),
@@ -727,6 +745,20 @@ export const GetMonthCalendarResponse = zod.array(GetMonthCalendarResponseItem);
 /**
  * @summary Get 7-day statistics
  */
+export const getWeeklyStatsQueryDateRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+
+export const GetWeeklyStatsQueryParams = zod.object({
+  date: zod.coerce
+    .string()
+    .regex(getWeeklyStatsQueryDateRegExp)
+    .optional()
+    .describe(
+      "Client's local date (YYYY-MM-DD). Defaults to the server's date.",
+    ),
+});
+
 export const GetWeeklyStatsResponse = zod.object({
   avgDailyCalories: zod.number(),
   avgProtein: zod.number(),
@@ -753,6 +785,20 @@ export const GetWeeklyStatsResponse = zod.object({
 /**
  * @summary Get 30-day statistics
  */
+export const getMonthlyStatsQueryDateRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+
+export const GetMonthlyStatsQueryParams = zod.object({
+  date: zod.coerce
+    .string()
+    .regex(getMonthlyStatsQueryDateRegExp)
+    .optional()
+    .describe(
+      "Client's local date (YYYY-MM-DD). Defaults to the server's date.",
+    ),
+});
+
 export const GetMonthlyStatsResponse = zod.object({
   avgDailyCalories: zod.number(),
   avgProtein: zod.number(),
@@ -808,6 +854,20 @@ export const AnalyzeImageResponse = zod.object({
 /**
  * @summary Get AI-generated weekly nutrition and progress summary
  */
+export const getAiWeeklySummaryQueryDateRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+
+export const GetAiWeeklySummaryQueryParams = zod.object({
+  date: zod.coerce
+    .string()
+    .regex(getAiWeeklySummaryQueryDateRegExp)
+    .optional()
+    .describe(
+      "Client's local date (YYYY-MM-DD). Defaults to the server's date.",
+    ),
+});
+
 export const GetAiWeeklySummaryResponse = zod.object({
   period: zod.string(),
   summary: zod.string(),
@@ -820,6 +880,20 @@ export const GetAiWeeklySummaryResponse = zod.object({
 /**
  * @summary Get AI-generated monthly nutrition and progress summary
  */
+export const getAiMonthlySummaryQueryDateRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+
+export const GetAiMonthlySummaryQueryParams = zod.object({
+  date: zod.coerce
+    .string()
+    .regex(getAiMonthlySummaryQueryDateRegExp)
+    .optional()
+    .describe(
+      "Client's local date (YYYY-MM-DD). Defaults to the server's date.",
+    ),
+});
+
 export const GetAiMonthlySummaryResponse = zod.object({
   period: zod.string(),
   summary: zod.string(),

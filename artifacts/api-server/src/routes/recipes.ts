@@ -24,9 +24,6 @@ router.post("/", async (req, res) => {
   const body = CreateRecipeBody.parse(req.body);
   const { ingredients, ...recipeData } = body;
 
-  const foods = await db.select().from(foodsTable)
-    .where(eq(foodsTable.id, ingredients[0]?.foodId ?? 0));
-
   // Calculate totals
   let totalGrams = 0;
   let totalCalories = 0;

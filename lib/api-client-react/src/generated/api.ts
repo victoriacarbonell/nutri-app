@@ -31,9 +31,14 @@ import type {
   Food,
   FoodAnalysisResult,
   FoodListResponse,
+  GetAiMonthlySummaryParams,
+  GetAiWeeklySummaryParams,
   GetExercisesParams,
   GetFoodsParams,
+  GetMonthlyStatsParams,
   GetRecipesParams,
+  GetTodaySummaryParams,
+  GetWeeklyStatsParams,
   GetWeightLogsParams,
   HealthStatus,
   LogEntry,
@@ -2366,41 +2371,57 @@ export const useDeleteWeightLog = <
 /**
  * @summary Get today's calorie and macro summary
  */
-export const getGetTodaySummaryUrl = () => {
-  return `/api/dashboard/today`;
+export const getGetTodaySummaryUrl = (params?: GetTodaySummaryParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/today?${stringifiedParams}`
+    : `/api/dashboard/today`;
 };
 
 export const getTodaySummary = async (
+  params?: GetTodaySummaryParams,
   options?: RequestInit,
 ): Promise<TodaySummary> => {
-  return customFetch<TodaySummary>(getGetTodaySummaryUrl(), {
+  return customFetch<TodaySummary>(getGetTodaySummaryUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetTodaySummaryQueryKey = () => {
-  return [`/api/dashboard/today`] as const;
+export const getGetTodaySummaryQueryKey = (params?: GetTodaySummaryParams) => {
+  return [`/api/dashboard/today`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetTodaySummaryQueryOptions = <
   TData = Awaited<ReturnType<typeof getTodaySummary>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getTodaySummary>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetTodaySummaryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTodaySummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetTodaySummaryQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getGetTodaySummaryQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getTodaySummary>>> = ({
     signal,
-  }) => getTodaySummary({ signal, ...requestOptions });
+  }) => getTodaySummary(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getTodaySummary>>,
@@ -2421,15 +2442,18 @@ export type GetTodaySummaryQueryError = ErrorType<unknown>;
 export function useGetTodaySummary<
   TData = Awaited<ReturnType<typeof getTodaySummary>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getTodaySummary>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetTodaySummaryQueryOptions(options);
+>(
+  params?: GetTodaySummaryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTodaySummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTodaySummaryQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -2533,41 +2557,57 @@ export function useGetMonthCalendar<
 /**
  * @summary Get 7-day statistics
  */
-export const getGetWeeklyStatsUrl = () => {
-  return `/api/dashboard/stats/weekly`;
+export const getGetWeeklyStatsUrl = (params?: GetWeeklyStatsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/stats/weekly?${stringifiedParams}`
+    : `/api/dashboard/stats/weekly`;
 };
 
 export const getWeeklyStats = async (
+  params?: GetWeeklyStatsParams,
   options?: RequestInit,
 ): Promise<PeriodStats> => {
-  return customFetch<PeriodStats>(getGetWeeklyStatsUrl(), {
+  return customFetch<PeriodStats>(getGetWeeklyStatsUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetWeeklyStatsQueryKey = () => {
-  return [`/api/dashboard/stats/weekly`] as const;
+export const getGetWeeklyStatsQueryKey = (params?: GetWeeklyStatsParams) => {
+  return [`/api/dashboard/stats/weekly`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetWeeklyStatsQueryOptions = <
   TData = Awaited<ReturnType<typeof getWeeklyStats>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getWeeklyStats>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetWeeklyStatsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getWeeklyStats>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetWeeklyStatsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getGetWeeklyStatsQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getWeeklyStats>>> = ({
     signal,
-  }) => getWeeklyStats({ signal, ...requestOptions });
+  }) => getWeeklyStats(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getWeeklyStats>>,
@@ -2588,15 +2628,18 @@ export type GetWeeklyStatsQueryError = ErrorType<unknown>;
 export function useGetWeeklyStats<
   TData = Awaited<ReturnType<typeof getWeeklyStats>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getWeeklyStats>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetWeeklyStatsQueryOptions(options);
+>(
+  params?: GetWeeklyStatsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getWeeklyStats>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetWeeklyStatsQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -2608,41 +2651,57 @@ export function useGetWeeklyStats<
 /**
  * @summary Get 30-day statistics
  */
-export const getGetMonthlyStatsUrl = () => {
-  return `/api/dashboard/stats/monthly`;
+export const getGetMonthlyStatsUrl = (params?: GetMonthlyStatsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/dashboard/stats/monthly?${stringifiedParams}`
+    : `/api/dashboard/stats/monthly`;
 };
 
 export const getMonthlyStats = async (
+  params?: GetMonthlyStatsParams,
   options?: RequestInit,
 ): Promise<PeriodStats> => {
-  return customFetch<PeriodStats>(getGetMonthlyStatsUrl(), {
+  return customFetch<PeriodStats>(getGetMonthlyStatsUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetMonthlyStatsQueryKey = () => {
-  return [`/api/dashboard/stats/monthly`] as const;
+export const getGetMonthlyStatsQueryKey = (params?: GetMonthlyStatsParams) => {
+  return [`/api/dashboard/stats/monthly`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetMonthlyStatsQueryOptions = <
   TData = Awaited<ReturnType<typeof getMonthlyStats>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getMonthlyStats>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetMonthlyStatsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMonthlyStats>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetMonthlyStatsQueryKey();
+  const queryKey = queryOptions?.queryKey ?? getGetMonthlyStatsQueryKey(params);
 
   const queryFn: QueryFunction<Awaited<ReturnType<typeof getMonthlyStats>>> = ({
     signal,
-  }) => getMonthlyStats({ signal, ...requestOptions });
+  }) => getMonthlyStats(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getMonthlyStats>>,
@@ -2663,15 +2722,18 @@ export type GetMonthlyStatsQueryError = ErrorType<unknown>;
 export function useGetMonthlyStats<
   TData = Awaited<ReturnType<typeof getMonthlyStats>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getMonthlyStats>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetMonthlyStatsQueryOptions(options);
+>(
+  params?: GetMonthlyStatsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getMonthlyStats>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetMonthlyStatsQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -2769,41 +2831,60 @@ export const useAnalyzeImage = <
 /**
  * @summary Get AI-generated weekly nutrition and progress summary
  */
-export const getGetAiWeeklySummaryUrl = () => {
-  return `/api/ai/weekly-summary`;
+export const getGetAiWeeklySummaryUrl = (params?: GetAiWeeklySummaryParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/ai/weekly-summary?${stringifiedParams}`
+    : `/api/ai/weekly-summary`;
 };
 
 export const getAiWeeklySummary = async (
+  params?: GetAiWeeklySummaryParams,
   options?: RequestInit,
 ): Promise<AiSummary> => {
-  return customFetch<AiSummary>(getGetAiWeeklySummaryUrl(), {
+  return customFetch<AiSummary>(getGetAiWeeklySummaryUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetAiWeeklySummaryQueryKey = () => {
-  return [`/api/ai/weekly-summary`] as const;
+export const getGetAiWeeklySummaryQueryKey = (
+  params?: GetAiWeeklySummaryParams,
+) => {
+  return [`/api/ai/weekly-summary`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetAiWeeklySummaryQueryOptions = <
   TData = Awaited<ReturnType<typeof getAiWeeklySummary>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getAiWeeklySummary>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetAiWeeklySummaryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAiWeeklySummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetAiWeeklySummaryQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getGetAiWeeklySummaryQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getAiWeeklySummary>>
-  > = ({ signal }) => getAiWeeklySummary({ signal, ...requestOptions });
+  > = ({ signal }) => getAiWeeklySummary(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getAiWeeklySummary>>,
@@ -2824,15 +2905,18 @@ export type GetAiWeeklySummaryQueryError = ErrorType<unknown>;
 export function useGetAiWeeklySummary<
   TData = Awaited<ReturnType<typeof getAiWeeklySummary>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getAiWeeklySummary>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetAiWeeklySummaryQueryOptions(options);
+>(
+  params?: GetAiWeeklySummaryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAiWeeklySummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAiWeeklySummaryQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
@@ -2844,41 +2928,63 @@ export function useGetAiWeeklySummary<
 /**
  * @summary Get AI-generated monthly nutrition and progress summary
  */
-export const getGetAiMonthlySummaryUrl = () => {
-  return `/api/ai/monthly-summary`;
+export const getGetAiMonthlySummaryUrl = (
+  params?: GetAiMonthlySummaryParams,
+) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/ai/monthly-summary?${stringifiedParams}`
+    : `/api/ai/monthly-summary`;
 };
 
 export const getAiMonthlySummary = async (
+  params?: GetAiMonthlySummaryParams,
   options?: RequestInit,
 ): Promise<AiSummary> => {
-  return customFetch<AiSummary>(getGetAiMonthlySummaryUrl(), {
+  return customFetch<AiSummary>(getGetAiMonthlySummaryUrl(params), {
     ...options,
     method: "GET",
   });
 };
 
-export const getGetAiMonthlySummaryQueryKey = () => {
-  return [`/api/ai/monthly-summary`] as const;
+export const getGetAiMonthlySummaryQueryKey = (
+  params?: GetAiMonthlySummaryParams,
+) => {
+  return [`/api/ai/monthly-summary`, ...(params ? [params] : [])] as const;
 };
 
 export const getGetAiMonthlySummaryQueryOptions = <
   TData = Awaited<ReturnType<typeof getAiMonthlySummary>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getAiMonthlySummary>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}) => {
+>(
+  params?: GetAiMonthlySummaryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAiMonthlySummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
   const { query: queryOptions, request: requestOptions } = options ?? {};
 
-  const queryKey = queryOptions?.queryKey ?? getGetAiMonthlySummaryQueryKey();
+  const queryKey =
+    queryOptions?.queryKey ?? getGetAiMonthlySummaryQueryKey(params);
 
   const queryFn: QueryFunction<
     Awaited<ReturnType<typeof getAiMonthlySummary>>
-  > = ({ signal }) => getAiMonthlySummary({ signal, ...requestOptions });
+  > = ({ signal }) =>
+    getAiMonthlySummary(params, { signal, ...requestOptions });
 
   return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
     Awaited<ReturnType<typeof getAiMonthlySummary>>,
@@ -2899,15 +3005,18 @@ export type GetAiMonthlySummaryQueryError = ErrorType<unknown>;
 export function useGetAiMonthlySummary<
   TData = Awaited<ReturnType<typeof getAiMonthlySummary>>,
   TError = ErrorType<unknown>,
->(options?: {
-  query?: UseQueryOptions<
-    Awaited<ReturnType<typeof getAiMonthlySummary>>,
-    TError,
-    TData
-  >;
-  request?: SecondParameter<typeof customFetch>;
-}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-  const queryOptions = getGetAiMonthlySummaryQueryOptions(options);
+>(
+  params?: GetAiMonthlySummaryParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getAiMonthlySummary>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetAiMonthlySummaryQueryOptions(params, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;

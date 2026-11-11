@@ -2,7 +2,13 @@ import { Router } from "express";
 import { db } from "@workspace/db";
 import { logEntriesTable, exercisesTable, userProfileTable, weightLogsTable } from "@workspace/db";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
+import {
+  GetTodaySummaryQueryParams,
+  GetWeeklyStatsQueryParams,
+  GetMonthlyStatsQueryParams,
+} from "@workspace/api-zod";
 import { calcHarrisBenedict } from "./profile";
+import { addDays, resolveDate } from "../lib/dates";
 
 const router = Router();
 
@@ -26,7 +32,8 @@ function getDayStatus(calories: number, goal: number, min: number | null, max: n
 }
 
 router.get("/today", async (req, res) => {
-  const today = new Date().toISOString().slice(0, 10);
+  const params = GetTodaySummaryQueryParams.parse(req.query);
+  const today = resolveDate(params.date);
   const profiles = await db.select().from(userProfileTable).limit(1);
   const profile = profiles[0];
   const { goal, min, max } = getCalorieGoal(profile);
@@ -101,12 +108,9 @@ router.get("/calendar/:year/:month", async (req, res) => {
   return res.json(result);
 });
 
-async function getPeriodStats(daysBack: number) {
-  const end = new Date();
-  const start = new Date();
-  start.setDate(start.getDate() - daysBack + 1);
-  const startDate = start.toISOString().slice(0, 10);
-  const endDate = end.toISOString().slice(0, 10);
+// Estadísticas de los últimos `daysBack` días, terminando en `endDate` incluido.
+async function getPeriodStats(daysBack: number, endDate: string) {
+  const startDate = addDays(endDate, -daysBack + 1);
 
   const profiles = await db.select().from(userProfileTable).limit(1);
   const profile = profiles[0];
@@ -133,9 +137,7 @@ async function getPeriodStats(daysBack: number) {
   let daysOnTrack = 0, daysOver = 0, daysUnder = 0;
 
   for (let d = 0; d < daysBack; d++) {
-    const date = new Date(start);
-    date.setDate(start.getDate() + d);
-    const dateStr = date.toISOString().slice(0, 10);
+    const dateStr = addDays(startDate, d);
     const data = dateMap.get(dateStr);
     const totalCalories = data?.calories ?? 0;
     const hasLog = !!data;
@@ -176,11 +178,13 @@ async function getPeriodStats(daysBack: number) {
 }
 
 router.get("/stats/weekly", async (req, res) => {
-  return res.json(await getPeriodStats(7));
+  const params = GetWeeklyStatsQueryParams.parse(req.query);
+  return res.json(await getPeriodStats(7, resolveDate(params.date)));
 });
 
 router.get("/stats/monthly", async (req, res) => {
-  return res.json(await getPeriodStats(30));
+  const params = GetMonthlyStatsQueryParams.parse(req.query);
+  return res.json(await getPeriodStats(30, resolveDate(params.date)));
 });
 
 export default router;
