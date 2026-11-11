@@ -45,9 +45,9 @@ function DayDetailModal({ date, calendarDay, onClose }: DayDetailModalProps) {
     ? Math.round((calendarDay.totalCalories / calendarDay.calorieGoal) * 100)
     : 0;
 
-  const totalProtein = dayLog?.meals.reduce((s, m) => s + m.entries.reduce((ss, e) => ss + (e.food?.proteinG ?? 0) * (e.amountGrams / 100), 0), 0) ?? 0;
-  const totalCarbs   = dayLog?.meals.reduce((s, m) => s + m.entries.reduce((ss, e) => ss + (e.food?.carbsG ?? 0) * (e.amountGrams / 100), 0), 0) ?? 0;
-  const totalFat     = dayLog?.meals.reduce((s, m) => s + m.entries.reduce((ss, e) => ss + (e.food?.fatG ?? 0) * (e.amountGrams / 100), 0), 0) ?? 0;
+  const totalProtein = dayLog?.totalProtein ?? 0;
+  const totalCarbs = dayLog?.totalCarbs ?? 0;
+  const totalFat = dayLog?.totalFat ?? 0;
   const totalExercise = dayLog?.exercises?.reduce((s, e) => s + e.caloriesBurned, 0) ?? 0;
 
   const style = cellStyle(calendarDay?.status ?? "no_data", calendarDay?.hasLog ?? false, false);

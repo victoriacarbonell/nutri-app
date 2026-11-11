@@ -25,7 +25,7 @@ export default function Home() {
   const deleteExercise = useDeleteExercise();
 
   const handleDeleteEntry = (id: number) => {
-    deleteEntry.mutate({ date: today, id }, {
+    deleteEntry.mutate({ date: today, entryId: id }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetDayLogQueryKey(today) });
         queryClient.invalidateQueries({ queryKey: getGetTodaySummaryQueryKey() });
