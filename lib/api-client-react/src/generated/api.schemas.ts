@@ -407,6 +407,30 @@ export interface AiSummary {
   generatedAt: string;
 }
 
+export interface AuthUser {
+  id: number;
+  email: string;
+  createdAt: string;
+}
+
+export interface RegisterBody {
+  email: string;
+  /** @minLength 8 */
+  password: string;
+  inviteCode?: string | null;
+}
+
+export interface LoginBody {
+  email: string;
+  password: string;
+}
+
+export interface AiUsage {
+  used: number;
+  limit: number;
+  remaining: number;
+}
+
 export type GetFoodsParams = {
   q?: string;
   category?: string;

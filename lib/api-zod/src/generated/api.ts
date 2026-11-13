@@ -902,3 +902,46 @@ export const GetAiMonthlySummaryResponse = zod.object({
   score: zod.number().nullish(),
   generatedAt: zod.string(),
 });
+
+/**
+ * @summary Create an account and start a session
+ */
+export const registerBodyPasswordMin = 8;
+
+export const RegisterBody = zod.object({
+  email: zod.string().email(),
+  password: zod.string().min(registerBodyPasswordMin),
+  inviteCode: zod.string().nullish(),
+});
+
+/**
+ * @summary Log in and start a session
+ */
+export const LoginBody = zod.object({
+  email: zod.string(),
+  password: zod.string(),
+});
+
+export const LoginResponse = zod.object({
+  id: zod.number(),
+  email: zod.string(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Get the logged-in user
+ */
+export const GetMeResponse = zod.object({
+  id: zod.number(),
+  email: zod.string(),
+  createdAt: zod.string(),
+});
+
+/**
+ * @summary Get today's AI usage for the logged-in user
+ */
+export const GetAiUsageResponse = zod.object({
+  used: zod.number(),
+  limit: zod.number(),
+  remaining: zod.number(),
+});

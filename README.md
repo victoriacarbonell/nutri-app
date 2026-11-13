@@ -84,6 +84,10 @@ pnpm db:migrate    # la aplica a la base de datos
 
 Las migraciones se versionan en git; no se usa `drizzle-kit push`.
 
+## Cuentas y sesiones
+
+Cada usuario se registra con email y contraseña (hash scrypt) y recibe una cookie de sesión `httpOnly` válida 30 días. Todos los datos (alimentos, recetas, diario, peso, perfil) pertenecen al usuario de la sesión. Con `SIGNUP_CODE` definido, el registro pide ese código.
+
 ## Variables de entorno
 
 | Variable | Descripción |
@@ -92,6 +96,9 @@ Las migraciones se versionan en git; no se usa `drizzle-kit push`.
 | `PORT` | Puerto del API (por defecto 8080) |
 | `OPENAI_API_KEY` | Clave de OpenAI. Opcional: sin ella, las funciones de IA responden 503 |
 | `OPENAI_MODEL` | Modelo de OpenAI (por defecto `gpt-5.1`) |
+| `AI_DAILY_LIMIT` | Llamadas a la IA por usuario y día (por defecto 20) |
+| `SIGNUP_CODE` | Opcional: código necesario para registrarse |
+| `CORS_ORIGIN` | Opcional: orígenes permitidos si el front vive en otro dominio |
 
 ## Estado y despliegue
 

@@ -2,12 +2,14 @@ import { useState } from "react";
 import {
   useGetAiWeeklySummary, getGetAiWeeklySummaryQueryKey,
   useGetAiMonthlySummary, getGetAiMonthlySummaryQueryKey,
+  useGetAiUsage, getGetAiUsageQueryKey,
 } from "@workspace/api-client-react";
 import { Sparkles, RefreshCw, Lightbulb, Target, Star, TrendingUp, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
+import { apiErrorMessage } from "@/lib/api-errors";
 
 type Period = "weekly" | "monthly";
 
@@ -35,7 +37,7 @@ function SummaryCard({ period }: { period: Period }) {
     query: { queryKey: getGetAiMonthlySummaryQueryKey(params), enabled: period === "monthly", staleTime: 5 * 60 * 1000 },
   });
 
-  const { data, isLoading, isFetching, refetch } = period === "weekly" ? weekly : monthly;
+  const { data, isLoading, isFetching, refetch, error } = period === "weekly" ? weekly : monthly;
 
   if (isLoading || isFetching) {
     return (
@@ -57,6 +59,15 @@ function SummaryCard({ period }: { period: Period }) {
           <Skeleton className="h-5 w-32" />
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full rounded-2xl" />)}
         </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-card rounded-3xl p-6 border shadow-sm text-center space-y-3">
+        <p className="text-sm text-muted-foreground">{apiErrorMessage(error, "No se pudo generar el análisis.")}</p>
+        <Button variant="outline" className="rounded-xl" onClick={() => refetch()}>Reintentar</Button>
       </div>
     );
   }
@@ -134,6 +145,7 @@ function SummaryCard({ period }: { period: Period }) {
 
 export default function AISummaries() {
   const [period, setPeriod] = useState<Period>("weekly");
+  const { data: usage } = useGetAiUsage({ query: { queryKey: getGetAiUsageQueryKey(), retry: false } });
 
   return (
     <div className="min-h-[100dvh] bg-background pt-8 px-4 pb-24">
@@ -179,6 +191,7 @@ export default function AISummaries() {
         <p className="text-xs text-muted-foreground leading-relaxed">
           El análisis se genera en tiempo real con tus datos de alimentación, ejercicio y peso.
           Cuantos más días registres, más preciso será.
+          {usage && ` Hoy has usado ${usage.used} de ${usage.limit} análisis con IA.`}
         </p>
       </div>
 

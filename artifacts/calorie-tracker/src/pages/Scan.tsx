@@ -11,6 +11,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import type { FoodAnalysisResult } from "@workspace/api-client-react";
 import { inferCategory, scaleMacros, sumMacros } from "@workspace/shared";
+import { apiErrorMessage } from "@/lib/api-errors";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -120,8 +121,8 @@ export default function Scan() {
               })),
             );
           },
-          onError: () =>
-            toast({ title: "Error al analizar", description: "No pudimos analizar la imagen. Intenta de nuevo.", variant: "destructive" }),
+          onError: (err) =>
+            toast({ title: "Error al analizar", description: apiErrorMessage(err, "No pudimos analizar la imagen. Intenta de nuevo."), variant: "destructive" }),
         }
       );
     };

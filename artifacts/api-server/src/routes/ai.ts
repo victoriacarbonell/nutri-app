@@ -9,6 +9,7 @@ import {
   GetAiMonthlySummaryQueryParams,
 } from "@workspace/api-zod";
 import { addDays, resolveDate } from "../lib/dates";
+import { aiUsage, enforceAiLimit, recordAiRequest } from "../lib/ai-limits";
 
 const router = Router();
 
@@ -23,6 +24,13 @@ router.use((_req, res, next) => {
   }
   next();
 });
+
+router.get("/usage", async (req, res) => {
+  res.json(await aiUsage(req.userId));
+});
+
+// Límite diario de llamadas por usuario (AI_DAILY_LIMIT).
+router.use(enforceAiLimit);
 
 // El middleware anterior garantiza que el cliente existe al llegar a las rutas.
 const openai = openaiClient!;
@@ -81,6 +89,7 @@ Be realistic with portion sizes. If the image is unclear, use "low" confidence.`
     ],
   });
 
+  await recordAiRequest(req.userId, "analyze_image");
   const content = response.choices[0]?.message?.content ?? "{}";
   try {
     const parsed = JSON.parse(content);
@@ -165,6 +174,7 @@ Responde en formato JSON:
     messages: [{ role: "user", content: prompt }],
   });
 
+  await recordAiRequest(req.userId, "weekly_summary");
   const content = response.choices[0]?.message?.content ?? "{}";
   try {
     const parsed = JSON.parse(content);
@@ -229,6 +239,7 @@ Responde en JSON:
     messages: [{ role: "user", content: prompt }],
   });
 
+  await recordAiRequest(req.userId, "monthly_summary");
   const content = response.choices[0]?.message?.content ?? "{}";
   try {
     const parsed = JSON.parse(content);

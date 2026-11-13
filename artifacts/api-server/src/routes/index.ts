@@ -8,14 +8,16 @@ import exercisesRouter from "./exercises";
 import weightRouter from "./weight";
 import dashboardRouter from "./dashboard";
 import aiRouter from "./ai";
-import { attachCurrentUser } from "../middlewares/current-user";
+import authRouter from "./auth";
+import { requireUser } from "../middlewares/current-user";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+router.use("/auth", authRouter);
 
-// Todo lo que sigue pertenece a un usuario.
-router.use(attachCurrentUser);
+// Todo lo que sigue exige sesión iniciada.
+router.use(requireUser);
 router.use("/profile", profileRouter);
 router.use("/foods", foodsRouter);
 router.use("/recipes", recipesRouter);
