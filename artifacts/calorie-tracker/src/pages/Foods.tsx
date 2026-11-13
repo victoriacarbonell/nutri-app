@@ -1,127 +1,14 @@
 import { useState, useEffect } from "react";
-import {
-  useGetFoods, getGetFoodsQueryKey,
-  useCreateLogEntry, getGetDayLogQueryKey, getGetTodaySummaryQueryKey,
-} from "@workspace/api-client-react";
-import { Search, Plus, Loader2, ScanBarcode, X } from "lucide-react";
+import { useGetFoods, getGetFoodsQueryKey } from "@workspace/api-client-react";
+import { Search, Plus, ScanBarcode, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import CreateFoodModal from "@/components/CreateFoodModal";
 import LogEntryModal from "@/components/LogEntryModal";
 import type { Food } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { FOOD_CATEGORIES, getCategoryEmoji, inferCategory } from "@workspace/shared";
-
-// ─── Quick-add modal (same as before) ────────────────────────────────────────
-
-function QuickAddModal({ food, open, onOpenChange }: { food: Food | null; open: boolean; onOpenChange: (v: boolean) => void }) {
-  const [amount, setAmount] = useState("100");
-  const [mealType, setMealType] = useState("almuerzo");
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const createLogEntry = useCreateLogEntry();
-
-  useEffect(() => { if (open) setAmount("100"); }, [open]);
-  if (!food) return null;
-
-  const grams = parseFloat(amount) || 100;
-  const mult = grams / 100;
-
-  const handleSave = () => {
-    const today = format(new Date(), "yyyy-MM-dd");
-    createLogEntry.mutate(
-      { date: today, data: { mealType: mealType as any, foodId: food.id, amountGrams: grams } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetDayLogQueryKey(today) });
-          queryClient.invalidateQueries({ queryKey: getGetTodaySummaryQueryKey() });
-          toast({ title: "¡Añadido!", description: `${food.name} añadido a ${mealType}.` });
-          onOpenChange(false);
-        },
-        onError: () => toast({ title: "Error", description: "No se pudo añadir.", variant: "destructive" }),
-      }
-    );
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-3xl p-6">
-        <DialogHeader>
-          <div className="flex items-center gap-3 mb-1">
-            {food.photoUrl ? (
-              <span className="text-4xl">{food.photoUrl.length <= 4 ? food.photoUrl : ""}</span>
-            ) : (
-              <span className="text-4xl">{getCategoryEmoji(food.category)}</span>
-            )}
-            <div>
-              <DialogTitle className="text-xl font-serif leading-tight">{food.name}</DialogTitle>
-              {food.brand && <p className="text-sm text-muted-foreground">{food.brand}</p>}
-            </div>
-          </div>
-        </DialogHeader>
-        <div className="bg-secondary/30 p-4 rounded-2xl my-4 grid grid-cols-4 gap-2 text-center">
-          <div>
-            <p className="text-2xl font-bold">{Math.round(food.caloriesPer100g * mult)}</p>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">kcal</p>
-          </div>
-          <div>
-            <p className="font-semibold text-chart-1">{(food.proteinPer100g * mult).toFixed(1)}g</p>
-            <p className="text-[10px] uppercase text-muted-foreground">Prot</p>
-          </div>
-          <div>
-            <p className="font-semibold text-chart-3">{(food.carbsPer100g * mult).toFixed(1)}g</p>
-            <p className="text-[10px] uppercase text-muted-foreground">Carb</p>
-          </div>
-          <div>
-            <p className="font-semibold text-chart-2">{(food.fatPer100g * mult).toFixed(1)}g</p>
-            <p className="text-[10px] uppercase text-muted-foreground">Grasa</p>
-          </div>
-        </div>
-        <div className="space-y-4 mb-6">
-          <div>
-            <label className="text-sm font-medium mb-1.5 block">Cantidad (g)</label>
-            <Input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="bg-secondary/30 border-none rounded-xl h-14 text-lg text-center"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1.5 block">Comida</label>
-            <Select value={mealType} onValueChange={setMealType}>
-              <SelectTrigger className="bg-secondary/30 border-none rounded-xl h-14 text-base">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="desayuno">Desayuno</SelectItem>
-                <SelectItem value="almuerzo">Almuerzo</SelectItem>
-                <SelectItem value="comida">Comida</SelectItem>
-                <SelectItem value="merienda">Merienda</SelectItem>
-                <SelectItem value="cena">Cena</SelectItem>
-                <SelectItem value="snacks">Snacks</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <Button
-          className="w-full h-14 rounded-2xl text-base shadow-md shadow-primary/20"
-          onClick={handleSave}
-          disabled={createLogEntry.isPending || grams <= 0}
-        >
-          {createLogEntry.isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-          Añadir a Hoy
-        </Button>
-      </DialogContent>
-    </Dialog>
-  );
-}
 
 // ─── Food card ────────────────────────────────────────────────────────────────
 
@@ -214,7 +101,6 @@ export default function Foods() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedFood, setSelectedFood] = useState<Food | null>(null);
-  const [quickAddFood, setQuickAddFood] = useState<Food | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 400);
@@ -348,12 +234,6 @@ export default function Foods() {
           onOpenChange={(open) => !open && setSelectedFood(null)}
         />
       )}
-
-      <QuickAddModal
-        food={quickAddFood}
-        open={!!quickAddFood}
-        onOpenChange={(v) => !v && setQuickAddFood(null)}
-      />
     </div>
   );
 }

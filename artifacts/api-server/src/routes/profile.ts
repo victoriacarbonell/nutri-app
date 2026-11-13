@@ -1,12 +1,13 @@
 import { Router } from "express";
-import { db } from "@workspace/db";
-import { userProfileTable, weightLogsTable } from "@workspace/db";
-import { desc, eq } from "drizzle-orm";
-import { UpdateProfileBody, CreateWeightLogBody, GetWeightLogsQueryParams, DeleteWeightLogParams } from "@workspace/api-zod";
+import { db, userProfileTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
+import { UpdateProfileBody } from "@workspace/api-zod";
 
 const router = Router();
 
-function calcHarrisBenedict(profile: typeof userProfileTable.$inferSelect): number {
+type Profile = typeof userProfileTable.$inferSelect;
+
+function calcHarrisBenedict(profile: Profile): number {
   const { gender, weightKg, heightCm, age, activityLevel, goal } = profile;
   let bmr: number;
   if (gender === "male") {
@@ -26,48 +27,29 @@ function calcHarrisBenedict(profile: typeof userProfileTable.$inferSelect): numb
   return Math.round(tdee + (goalAdj[goal] ?? 0));
 }
 
+async function getProfile(userId: number): Promise<Profile | undefined> {
+  const [profile] = await db.select().from(userProfileTable).where(eq(userProfileTable.userId, userId));
+  return profile;
+}
+
 router.get("/", async (req, res) => {
-  const profiles = await db.select().from(userProfileTable).limit(1);
-  if (!profiles.length) return res.json(null);
-  const p = profiles[0];
-  return res.json({ ...p, calculatedCalorieGoal: calcHarrisBenedict(p) });
+  const profile = await getProfile(req.userId);
+  if (!profile) return res.json(null);
+  return res.json({ ...profile, calculatedCalorieGoal: calcHarrisBenedict(profile) });
 });
 
 router.put("/", async (req, res) => {
   const body = UpdateProfileBody.parse(req.body);
-  const profiles = await db.select().from(userProfileTable).limit(1);
-  let profile: typeof userProfileTable.$inferSelect;
-  if (profiles.length) {
-    const updated = await db.update(userProfileTable)
-      .set({ ...body, updatedAt: new Date() })
-      .where(eq(userProfileTable.id, profiles[0].id))
-      .returning();
-    profile = updated[0];
-  } else {
-    const inserted = await db.insert(userProfileTable).values({ ...body, updatedAt: new Date() }).returning();
-    profile = inserted[0];
-  }
-  return res.json({ ...profile, calculatedCalorieGoal: calcHarrisBenedict(profile) });
+  // Un perfil por usuario (user_id es único): crea o actualiza.
+  const [profile] = await db.insert(userProfileTable)
+    .values({ ...body, userId: req.userId, updatedAt: new Date() })
+    .onConflictDoUpdate({
+      target: userProfileTable.userId,
+      set: { ...body, updatedAt: new Date() },
+    })
+    .returning();
+  res.json({ ...profile, calculatedCalorieGoal: calcHarrisBenedict(profile) });
 });
 
-router.get("/weight", async (req, res) => {
-  const params = GetWeightLogsQueryParams.parse(req.query);
-  const limit = params.limit ?? 90;
-  const logs = await db.select().from(weightLogsTable).orderBy(desc(weightLogsTable.date)).limit(limit);
-  return res.json(logs);
-});
-
-router.post("/weight", async (req, res) => {
-  const body = CreateWeightLogBody.parse(req.body);
-  const [log] = await db.insert(weightLogsTable).values(body).returning();
-  return res.status(201).json(log);
-});
-
-router.delete("/weight/:id", async (req, res) => {
-  const { id } = DeleteWeightLogParams.parse({ id: Number(req.params.id) });
-  await db.delete(weightLogsTable).where(eq(weightLogsTable.id, id));
-  return res.status(204).end();
-});
-
-export { calcHarrisBenedict };
+export { calcHarrisBenedict, getProfile };
 export default router;

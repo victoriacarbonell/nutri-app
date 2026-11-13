@@ -7,7 +7,7 @@ import {
   useGetFoods, getGetFoodsQueryKey,
 } from "@workspace/api-client-react";
 import type { Food } from "@workspace/api-client-react";
-import { getCategoryEmoji } from "@workspace/shared";
+import { getCategoryEmoji, recipeTotals } from "@workspace/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Search, Trash2, Plus } from "lucide-react";
@@ -71,17 +71,10 @@ export default function CreateRecipeModal({ open, onOpenChange }: CreateRecipeMo
 
   const servings = Math.max(1, Number(form.watch("servings")) || 1);
 
-  const totals = ingredients.reduce(
-    (acc, ing) => {
-      const factor = (parseFloat(ing.amountGrams) || 0) / 100;
-      acc.grams += parseFloat(ing.amountGrams) || 0;
-      acc.calories += ing.food.caloriesPer100g * factor;
-      acc.protein += ing.food.proteinPer100g * factor;
-      acc.carbs += ing.food.carbsPer100g * factor;
-      acc.fat += ing.food.fatPer100g * factor;
-      return acc;
-    },
-    { grams: 0, calories: 0, protein: 0, carbs: 0, fat: 0 },
+  // Mismo cálculo que hace el API al guardar.
+  const totals = recipeTotals(
+    ingredients.map((ing) => ({ food: ing.food, amountGrams: parseFloat(ing.amountGrams) || 0 })),
+    servings,
   );
 
   const validIngredients = ingredients
@@ -119,7 +112,7 @@ export default function CreateRecipeModal({ open, onOpenChange }: CreateRecipeMo
           queryClient.invalidateQueries({ queryKey: getGetRecipesQueryKey() });
           toast({
             title: "Receta creada",
-            description: `${data.name}: ${Math.round(totals.calories / servings)} kcal por porción.`,
+            description: `${data.name}: ${Math.round(totals.perServing.calories)} kcal por porción.`,
           });
           reset();
           onOpenChange(false);
@@ -259,23 +252,23 @@ export default function CreateRecipeModal({ open, onOpenChange }: CreateRecipeMo
             {ingredients.length > 0 && (
               <div className="bg-secondary/30 rounded-2xl p-4 grid grid-cols-4 gap-2 text-center">
                 <div>
-                  <p className="text-xl font-bold">{Math.round(totals.calories / servings)}</p>
+                  <p className="text-xl font-bold">{Math.round(totals.perServing.calories)}</p>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground">kcal/porción</p>
                 </div>
                 <div>
-                  <p className="font-semibold text-chart-1">{(totals.protein / servings).toFixed(1)}g</p>
+                  <p className="font-semibold text-chart-1">{totals.perServing.protein.toFixed(1)}g</p>
                   <p className="text-[10px] uppercase text-muted-foreground">Prot</p>
                 </div>
                 <div>
-                  <p className="font-semibold text-chart-3">{(totals.carbs / servings).toFixed(1)}g</p>
+                  <p className="font-semibold text-chart-3">{totals.perServing.carbs.toFixed(1)}g</p>
                   <p className="text-[10px] uppercase text-muted-foreground">Carb</p>
                 </div>
                 <div>
-                  <p className="font-semibold text-chart-2">{(totals.fat / servings).toFixed(1)}g</p>
+                  <p className="font-semibold text-chart-2">{totals.perServing.fat.toFixed(1)}g</p>
                   <p className="text-[10px] uppercase text-muted-foreground">Grasa</p>
                 </div>
                 <p className="col-span-4 text-xs text-muted-foreground mt-1">
-                  {Math.round(totals.grams)} g en total · {servings} {servings === 1 ? "porción" : "porciones"}
+                  {Math.round(totals.totalGrams)} g en total · {servings} {servings === 1 ? "porción" : "porciones"}
                 </p>
               </div>
             )}
