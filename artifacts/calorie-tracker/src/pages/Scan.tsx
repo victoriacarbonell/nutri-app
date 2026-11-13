@@ -10,7 +10,7 @@ import {
 } from "@workspace/api-client-react";
 import { useToast } from "@/hooks/use-toast";
 import type { FoodAnalysisResult } from "@workspace/api-client-react";
-import { inferCategory } from "@workspace/shared";
+import { inferCategory, scaleMacros, sumMacros } from "@workspace/shared";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -49,18 +49,9 @@ interface AddBarcodeItemState {
   mealType: MealType;
 }
 
+// Mismo cálculo que hace el API al guardar.
 function itemTotals(items: AnalyzedItemState[]) {
-  return items.reduce(
-    (acc, item) => {
-      const factor = (parseFloat(item.grams) || 0) / 100;
-      acc.calories += item.caloriesPer100g * factor;
-      acc.protein += item.proteinPer100g * factor;
-      acc.carbs += item.carbsPer100g * factor;
-      acc.fat += item.fatPer100g * factor;
-      return acc;
-    },
-    { calories: 0, protein: 0, carbs: 0, fat: 0 },
-  );
+  return sumMacros(items.map((item) => scaleMacros(item, parseFloat(item.grams) || 0)));
 }
 
 function MealTypeSelect({ value, onChange, className }: { value: MealType; onChange: (v: MealType) => void; className?: string }) {
@@ -372,7 +363,7 @@ export default function Scan() {
                             inputMode="decimal"
                             aria-label={`Gramos de ${item.name}`}
                           />
-                          <span className="w-16 text-right font-medium">{Math.round(item.caloriesPer100g * grams / 100)} kcal</span>
+                          <span className="w-16 text-right font-medium">{Math.round(scaleMacros(item, grams).calories)} kcal</span>
                           <button
                             type="button"
                             onClick={() => removeItem(i)}

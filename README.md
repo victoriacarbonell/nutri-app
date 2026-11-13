@@ -58,9 +58,9 @@ pnpm install
 # 2. Configurar el entorno
 cp .env.example .env        # en PowerShell: Copy-Item .env.example .env
 
-# 3. Base de datos: arrancar PostgreSQL y crear las tablas
+# 3. Base de datos: arrancar PostgreSQL y aplicar las migraciones
 pnpm db:up
-pnpm db:push
+pnpm db:migrate
 
 # 4. Arrancar API y front, cada uno en una terminal
 pnpm dev:api                # http://localhost:8080
@@ -74,6 +74,15 @@ Tras cambiar la especificación OpenAPI:
 ```bash
 pnpm --filter @workspace/api-spec run codegen
 ```
+
+Tras cambiar el esquema de la base de datos (`lib/db/src/schema`):
+
+```bash
+pnpm db:generate   # crea la migración SQL en lib/db/migrations
+pnpm db:migrate    # la aplica a la base de datos
+```
+
+Las migraciones se versionan en git; no se usa `drizzle-kit push`.
 
 ## Variables de entorno
 

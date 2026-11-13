@@ -3,6 +3,7 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import { errorHandler, notFoundHandler } from "./middlewares/error-handler";
 
 const app: Express = express();
 
@@ -30,5 +31,9 @@ app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
 app.use("/api", router);
+app.use("/api", notFoundHandler);
+
+// Siempre el último: convierte cualquier error en una respuesta JSON.
+app.use(errorHandler);
 
 export default app;

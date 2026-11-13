@@ -8,10 +8,14 @@ import exercisesRouter from "./exercises";
 import weightRouter from "./weight";
 import dashboardRouter from "./dashboard";
 import aiRouter from "./ai";
+import { attachCurrentUser } from "../middlewares/current-user";
 
 const router: IRouter = Router();
 
 router.use(healthRouter);
+
+// Todo lo que sigue pertenece a un usuario.
+router.use(attachCurrentUser);
 router.use("/profile", profileRouter);
 router.use("/foods", foodsRouter);
 router.use("/recipes", recipesRouter);

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Food } from "@workspace/api-client-react";
+import { scaleMacros } from "@workspace/shared";
 
 interface LogEntryModalProps {
   food: Food | null;
@@ -33,12 +34,13 @@ export default function LogEntryModal({ food, open, onOpenChange }: LogEntryModa
   if (!food) return null;
 
   const numAmount = parseFloat(amount) || 0;
-  const multiplier = numAmount / 100;
+  // Mismo cálculo que hace el API al guardar.
+  const macros = scaleMacros(food, numAmount);
   
-  const calcCalories = Math.round(food.caloriesPer100g * multiplier);
-  const calcProtein = (food.proteinPer100g * multiplier).toFixed(1);
-  const calcCarbs = (food.carbsPer100g * multiplier).toFixed(1);
-  const calcFat = (food.fatPer100g * multiplier).toFixed(1);
+  const calcCalories = Math.round(macros.calories);
+  const calcProtein = macros.protein.toFixed(1);
+  const calcCarbs = macros.carbs.toFixed(1);
+  const calcFat = macros.fat.toFixed(1);
 
   const handleSave = () => {
     const today = format(new Date(), "yyyy-MM-dd");

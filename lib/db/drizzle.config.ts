@@ -13,9 +13,12 @@ if (!process.env.DATABASE_URL) {
 }
 
 export default defineConfig({
-  // Ruta relativa al paquete: drizzle-kit la trata como glob y en Windows
+  // Rutas relativas al paquete: drizzle-kit las trata como glob y en Windows
   // las barras invertidas de path.join rompen la búsqueda.
   schema: "./src/schema/index.ts",
+  // Las migraciones SQL se versionan en git: `pnpm db:generate` las crea a
+  // partir del esquema y `pnpm db:migrate` las aplica.
+  out: "./migrations",
   dialect: "postgresql",
   dbCredentials: {
     url: process.env.DATABASE_URL,

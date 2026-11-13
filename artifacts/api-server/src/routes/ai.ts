@@ -91,7 +91,7 @@ Be realistic with portion sizes. If the image is unclear, use "low" confidence.`
 });
 
 // Datos de los ultimos `daysBack` dias hasta `endDate` incluido.
-async function getRecentData(daysBack: number, endDate: string) {
+async function getRecentData(userId: number, daysBack: number, endDate: string) {
   const startDate = addDays(endDate, -daysBack);
 
   const [entries, exercises, profile, weights] = await Promise.all([
@@ -102,13 +102,13 @@ async function getRecentData(daysBack: number, endDate: string) {
       carbs: sql<number>`sum(${logEntriesTable.carbs})`,
       fat: sql<number>`sum(${logEntriesTable.fat})`,
     }).from(logEntriesTable)
-      .where(and(gte(logEntriesTable.date, startDate), lte(logEntriesTable.date, endDate)))
+      .where(and(eq(logEntriesTable.userId, userId), gte(logEntriesTable.date, startDate), lte(logEntriesTable.date, endDate)))
       .groupBy(logEntriesTable.date),
     db.select().from(exercisesTable)
-      .where(and(gte(exercisesTable.date, startDate), lte(exercisesTable.date, endDate))),
-    db.select().from(userProfileTable).limit(1),
+      .where(and(eq(exercisesTable.userId, userId), gte(exercisesTable.date, startDate), lte(exercisesTable.date, endDate))),
+    db.select().from(userProfileTable).where(eq(userProfileTable.userId, userId)),
     db.select().from(weightLogsTable)
-      .where(and(gte(weightLogsTable.date, startDate), lte(weightLogsTable.date, endDate)))
+      .where(and(eq(weightLogsTable.userId, userId), gte(weightLogsTable.date, startDate), lte(weightLogsTable.date, endDate)))
       .orderBy(asc(weightLogsTable.date)),
   ]);
 
@@ -117,7 +117,7 @@ async function getRecentData(daysBack: number, endDate: string) {
 
 router.get("/weekly-summary", async (req, res) => {
   const params = GetAiWeeklySummaryQueryParams.parse(req.query);
-  const { entries, exercises, profile, weights, startDate, endDate } = await getRecentData(7, resolveDate(params.date));
+  const { entries, exercises, profile, weights, startDate, endDate } = await getRecentData(req.userId, 7, resolveDate(params.date));
 
   const avgCalories = entries.length ? entries.reduce((s, e) => s + Number(e.calories), 0) / entries.length : 0;
   const totalExercise = exercises.reduce((s, e) => s + e.caloriesBurned, 0);
@@ -188,7 +188,7 @@ Responde en formato JSON:
 
 router.get("/monthly-summary", async (req, res) => {
   const params = GetAiMonthlySummaryQueryParams.parse(req.query);
-  const { entries, exercises, profile, weights, startDate, endDate } = await getRecentData(30, resolveDate(params.date));
+  const { entries, exercises, profile, weights, startDate, endDate } = await getRecentData(req.userId, 30, resolveDate(params.date));
 
   const avgCalories = entries.length ? entries.reduce((s, e) => s + Number(e.calories), 0) / entries.length : 0;
   const totalExercise = exercises.reduce((s, e) => s + e.caloriesBurned, 0);
