@@ -42,7 +42,8 @@ Desarrollada con ayuda del agente de IA de Replit: yo definí las funcionalidade
 │   ├── api-client-react/    # Hooks generados (React Query)
 │   ├── api-spec/            # Especificación OpenAPI + Orval config
 │   ├── api-zod/             # Schemas Zod generados
-│   ├── db/                  # Schema Drizzle + cliente PostgreSQL
+│   ├── db/                  # Schema Drizzle, migraciones y cliente PostgreSQL
+│   ├── shared/              # Categorías de alimentos y cálculo de macros (API y front)
 │   └── integrations-openai-ai-server/  # Cliente OpenAI
 └── scripts/                 # Scripts de utilidad
 ```
@@ -115,20 +116,31 @@ La app se ejecuta en local, con PostgreSQL en Docker. Todavía no tiene una vers
 
 ## Próximos pasos
 
-- [ ] Publicar la app como PWA
-- [ ] Limitar el uso del análisis con IA para controlar el coste de la API de OpenAI
+- [x] Cuentas de usuario y sesiones
+- [x] Límite diario de uso de la IA
+- [x] PWA instalable con service worker
+- [ ] Desplegar API, base de datos y front en un hosting
+- [ ] Añadir recetas al diario desde la interfaz (el API ya lo permite)
+- [ ] Guardar las fotos de los alimentos en un almacenamiento de ficheros
 <!-- Añade aquí las mejoras que tengas pensadas -->
 
 ## Rutas de la API
 
+Salvo `/api/healthz` y `/api/auth/*`, todas exigen sesión iniciada.
+
 | Método | Ruta | Descripción |
 |--------|------|-------------|
+| POST | `/api/auth/register` | Crear cuenta e iniciar sesión |
+| POST | `/api/auth/login` | Iniciar sesión |
+| POST | `/api/auth/logout` | Cerrar sesión |
+| GET | `/api/auth/me` | Usuario de la sesión |
 | GET | `/api/foods` | Listado de alimentos (con filtros) |
 | POST | `/api/foods` | Crear alimento |
 | GET | `/api/logs/:date` | Registro del día |
-| POST | `/api/logs/:date` | Añadir entrada al registro |
+| POST | `/api/logs/:date/entries` | Añadir entrada al registro |
 | GET | `/api/dashboard/today` | Resumen del día actual |
 | GET | `/api/dashboard/calendar/:year/:month` | Vista mensual |
+| GET | `/api/dashboard/stats/weekly` y `/monthly` | Estadísticas de 7 y 30 días |
 | GET | `/api/profile` | Perfil del usuario |
 | PUT | `/api/profile` | Actualizar perfil |
 | GET/POST | `/api/weight` | Registros de peso |
@@ -137,3 +149,4 @@ La app se ejecuta en local, con PostgreSQL en Docker. Todavía no tiene una vers
 | POST | `/api/ai/analyze-image` | Análisis de foto con IA |
 | GET | `/api/ai/weekly-summary` | Resumen semanal IA |
 | GET | `/api/ai/monthly-summary` | Resumen mensual IA |
+| GET | `/api/ai/usage` | Usos de IA de hoy y límite |
