@@ -101,3 +101,9 @@ La app se ejecuta en el entorno de desarrollo de Replit, con la base de datos Po
 | POST | `/api/ai/analyze-image` | Análisis de foto con IA |
 | GET | `/api/ai/weekly-summary` | Resumen semanal IA |
 | GET | `/api/ai/monthly-summary` | Resumen mensual IA |
+
+## Licencia
+
+© Victoria Carbonell Sánchez. Todos los derechos reservados.
+
+Este repositorio es público como muestra de mi trabajo. No se concede permiso para usar, modificar ni distribuir el código. Las dependencias y los componentes de terceros conservan sus propias licencias.
