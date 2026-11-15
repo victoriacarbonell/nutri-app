@@ -84,6 +84,15 @@ pnpm db:migrate    # la aplica a la base de datos
 
 Las migraciones se versionan en git; no se usa `drizzle-kit push`.
 
+## PWA
+
+El front se instala como aplicación: `vite-plugin-pwa` genera el manifest y un service worker (Workbox) que precachea la app y guarda las últimas lecturas del API para abrirla sin conexión. Los iconos PNG están en `artifacts/calorie-tracker/public/icons`. En desarrollo el service worker no se registra; para probarlo:
+
+```bash
+pnpm --filter @workspace/calorie-tracker run build
+pnpm --filter @workspace/calorie-tracker run serve   # http://localhost:5173 con proxy a /api
+```
+
 ## Cuentas y sesiones
 
 Cada usuario se registra con email y contraseña (hash scrypt) y recibe una cookie de sesión `httpOnly` válida 30 días. Todos los datos (alimentos, recetas, diario, peso, perfil) pertenecen al usuario de la sesión. Con `SIGNUP_CODE` definido, el registro pide ese código.
