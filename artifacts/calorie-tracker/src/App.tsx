@@ -29,9 +29,12 @@ const queryClient = new QueryClient({
   },
   queryCache: new QueryCache({
     // Si cualquier consulta responde 401 (sesión caducada), se vuelve a
-    // comprobar /auth/me y la puerta de abajo enseña el login.
-    onError: (error) => {
-      if (isApiStatus(error, 401)) {
+    // comprobar /auth/me y la puerta de abajo enseña el login. La propia
+    // consulta /auth/me queda fuera: sin sesión siempre da 401 y se
+    // invalidaría a sí misma en bucle.
+    onError: (error, query) => {
+      const isMeQuery = query.queryKey[0] === getGetMeQueryKey()[0];
+      if (!isMeQuery && isApiStatus(error, 401)) {
         queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
       }
     },
