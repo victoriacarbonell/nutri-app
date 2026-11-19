@@ -24,6 +24,11 @@ const profileSchema = z.object({
   activityLevel: z.enum(["sedentary", "light", "moderate", "active", "very_active"]),
   goal: z.enum(["lose", "maintain", "gain"]),
   manualCalorieGoal: z.coerce.number().optional().nullable(),
+  minCalories: z.number().int().min(500).max(10000).nullable().optional(),
+  maxCalories: z.number().int().min(500).max(10000).nullable().optional(),
+}).refine((v) => v.minCalories == null || v.maxCalories == null || v.minCalories < v.maxCalories, {
+  message: "El mínimo tiene que ser menor que el máximo",
+  path: ["maxCalories"],
 });
 
 type ProfileFormValues = z.infer<typeof profileSchema>;
@@ -53,6 +58,8 @@ export default function Profile() {
       activityLevel: "moderate",
       goal: "maintain",
       manualCalorieGoal: null,
+      minCalories: null,
+      maxCalories: null,
     },
   });
 
@@ -67,6 +74,8 @@ export default function Profile() {
         activityLevel: (profile.activityLevel as any) ?? "moderate",
         goal: (profile.goal as any) ?? "maintain",
         manualCalorieGoal: profile.manualCalorieGoal ?? null,
+        minCalories: profile.minCalories ?? null,
+        maxCalories: profile.maxCalories ?? null,
       });
     }
   }, [profile, form]);
@@ -79,6 +88,8 @@ export default function Profile() {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
           queryClient.invalidateQueries({ queryKey: getGetTodaySummaryQueryKey() });
+          // The goal range also colours the calendar and the stats.
+          queryClient.invalidateQueries({ predicate: (q) => typeof q.queryKey[0] === "string" && q.queryKey[0].startsWith("/api/dashboard") });
           setSaved(true);
           toast({ title: "Perfil guardado", description: "Tus objetivos han sido actualizados." });
           setTimeout(() => setSaved(false), 3000);
@@ -252,6 +263,34 @@ export default function Profile() {
                   <FormMessage />
                 </FormItem>
               )} />
+
+              <div className="mt-4">
+                <p className="text-sm font-medium">Rango aceptable <span className="text-muted-foreground font-normal">(opcional)</span></p>
+                <p className="text-xs text-muted-foreground mb-2">Los días dentro del rango cuentan como «en objetivo» en el calendario. Si lo dejas vacío, se usa ±10 % del objetivo.</p>
+                <div className="grid grid-cols-2 gap-3">
+                  {(["minCalories", "maxCalories"] as const).map((name) => (
+                    <FormField key={name} control={form.control} name={name} render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">{name === "minCalories" ? "Mínimo (kcal)" : "Máximo (kcal)"}</FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            inputMode="numeric"
+                            name={field.name}
+                            ref={field.ref}
+                            onBlur={field.onBlur}
+                            value={field.value ?? ""}
+                            onChange={(e) => field.onChange(e.target.value ? Math.round(Number(e.target.value)) : null)}
+                            className="bg-secondary/30 border-none rounded-xl h-12"
+                            placeholder={name === "minCalories" ? "Ej. 1700" : "Ej. 2100"}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  ))}
+                </div>
+              </div>
             </div>
 
             <Button

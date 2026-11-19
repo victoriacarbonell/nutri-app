@@ -6,7 +6,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
 import { Plus, Scale, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import AddWeightModal from "@/components/AddWeightModal";
+import AddWeightModal, { MEASUREMENTS } from "@/components/AddWeightModal";
 import { useDeleteWeightLog } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
@@ -54,6 +54,14 @@ export default function Progress() {
   const latestWeight = sortedLogs.length > 0 ? sortedLogs[sortedLogs.length - 1].weightKg : null;
   const firstWeight = sortedLogs.length > 1 ? sortedLogs[0].weightKg : null;
   const weightChange = latestWeight && firstWeight ? latestWeight - firstWeight : null;
+
+  // Latest value of each body measurement and its change since the first time it was logged.
+  const measurementSummary = MEASUREMENTS.flatMap(({ key, label }) => {
+    const values = sortedLogs.filter((l) => l[key] != null).map((l) => l[key] as number);
+    if (values.length === 0) return [];
+    const latest = values[values.length - 1];
+    return [{ key, label, latest, change: values.length > 1 ? latest - values[0] : null }];
+  });
 
   return (
     <div className="min-h-[100dvh] bg-background pt-8 px-4 pb-24">
@@ -111,6 +119,26 @@ export default function Progress() {
         </div>
       )}
 
+      {/* Body measurements */}
+      {measurementSummary.length > 0 && (
+        <div className="bg-card rounded-3xl p-5 shadow-sm border mb-5">
+          <h2 className="font-serif text-lg mb-3">Medidas</h2>
+          <div className="grid grid-cols-3 gap-3">
+            {measurementSummary.map((m) => (
+              <div key={m.key} className="bg-secondary/30 rounded-2xl p-3 text-center">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{m.label}</p>
+                <p className="text-lg font-semibold">{m.latest} <span className="text-xs font-normal text-muted-foreground">cm</span></p>
+                {m.change !== null && m.change !== 0 && (
+                  <p className={`text-xs font-medium ${m.change < 0 ? "text-green-600" : "text-red-500"}`}>
+                    {m.change > 0 ? "+" : ""}{m.change.toFixed(1)} cm
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Log list */}
       <div className="space-y-3">
         <h3 className="font-serif text-lg px-1">Historial</h3>
@@ -128,13 +156,19 @@ export default function Progress() {
                 <span className="font-medium text-foreground">
                   {format(parseISO(log.date), "d 'de' MMMM, yyyy", { locale: es })}
                 </span>
+                {MEASUREMENTS.some(({ key }) => log[key] != null) && (
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {MEASUREMENTS.filter(({ key }) => log[key] != null).map(({ key, label }) => `${label} ${log[key]} cm`).join(" · ")}
+                  </p>
+                )}
                 {log.notes && <p className="text-xs text-muted-foreground mt-0.5">{log.notes}</p>}
               </div>
               <div className="flex items-center gap-3">
                 <span className="text-lg font-semibold">{log.weightKg} kg</span>
                 <button
                   onClick={() => handleDelete(log.id)}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                  aria-label="Eliminar"
+                  className="p-1 -m-1 opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                 >
                   <Trash2 size={15} />
                 </button>

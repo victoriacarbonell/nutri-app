@@ -5,9 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import CreateRecipeModal from "@/components/CreateRecipeModal";
+import LogRecipeModal from "@/components/LogRecipeModal";
+import LogTargetBanner from "@/components/LogTargetBanner";
+import type { Recipe } from "@workspace/api-client-react";
+import { useLogTarget } from "@/lib/meals";
 import { formatKcal, formatGrams } from "@/lib/format";
 
 export default function Recipes() {
+  const target = useLogTarget();
+  const [selectedRecipe, setSelectedRecipe] = useState<Recipe | null>(null);
   const [search, setSearch] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   // Wait until the user stops typing before searching (it used to send one request per keystroke).
@@ -33,6 +39,8 @@ export default function Recipes() {
           <Plus size={20} />
         </Button>
       </div>
+
+      <LogTargetBanner target={target} basePath="/recetas" switchTo={{ href: "/alimentos", label: "¿Es un alimento suelto? Búscalo en Alimentos" }} />
 
       <div className="relative mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
@@ -72,9 +80,11 @@ export default function Recipes() {
           </div>
         ) : (
           recipes?.map((recipe) => (
-            <div 
-              key={recipe.id} 
-              className="bg-card rounded-3xl p-5 shadow-sm border cursor-pointer hover:border-primary/30 transition-colors"
+            <button
+              type="button"
+              key={recipe.id}
+              onClick={() => setSelectedRecipe(recipe)}
+              className="w-full text-left bg-card rounded-3xl p-5 shadow-sm border cursor-pointer hover:border-primary/30 active:scale-[0.99] transition"
             >
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-medium text-lg text-foreground leading-tight">{recipe.name}</h3>
@@ -97,10 +107,19 @@ export default function Recipes() {
                 <span className="bg-chart-3/10 text-chart-3 px-2 py-1 rounded-md">C: {formatGrams(recipe.carbsPerServing)}g</span>
                 <span className="bg-chart-2/10 text-chart-2 px-2 py-1 rounded-md">G: {formatGrams(recipe.fatPerServing)}g</span>
               </div>
-            </div>
+            </button>
           ))
         )}
       </div>
+
+      <LogRecipeModal
+        recipe={selectedRecipe}
+        open={!!selectedRecipe}
+        onOpenChange={(open) => !open && setSelectedRecipe(null)}
+        date={target.date}
+        dateLabel={target.dateLabel}
+        defaultMeal={target.meal}
+      />
 
       <CreateRecipeModal 
         open={isCreateModalOpen} 

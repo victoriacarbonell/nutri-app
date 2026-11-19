@@ -156,7 +156,8 @@ export default function Home() {
                 <Button
                   size="icon" variant="ghost"
                   className="rounded-full w-9 h-9 bg-secondary/50 text-primary hover:bg-secondary"
-                  onClick={() => setLocation('/alimentos')}
+                  onClick={() => setLocation(`/alimentos?meal=${meal.mealType}`)}
+                  aria-label={`Añadir a ${meal.mealType}`}
                 >
                   <Plus size={18} />
                 </Button>

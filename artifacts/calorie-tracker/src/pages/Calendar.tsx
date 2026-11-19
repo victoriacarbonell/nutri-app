@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
   isSameMonth, isToday, addMonths, subMonths, isFuture, parseISO,
@@ -36,6 +37,7 @@ interface DayDetailModalProps {
 }
 
 function DayDetailModal({ date, calendarDay, onClose }: DayDetailModalProps) {
+  const [, setLocation] = useLocation();
   const { data: dayLog, isLoading } = useGetDayLog(date ?? "", {
     query: { queryKey: getGetDayLogQueryKey(date ?? ""), enabled: !!date },
   });
@@ -153,6 +155,16 @@ function DayDetailModal({ date, calendarDay, onClose }: DayDetailModalProps) {
               ))}
             </>
           )}
+        </div>
+
+        <div className="px-6 pb-6">
+          <Button
+            variant="outline"
+            className="w-full h-12 rounded-xl border-primary/30 text-primary"
+            onClick={() => { onClose(); setLocation(`/alimentos?date=${date}`); }}
+          >
+            Añadir comida a este día
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -1,29 +1,53 @@
 import { useState } from "react";
-import { useCreateWeightLog, getGetWeightLogsQueryKey } from "@workspace/api-client-react";
+import { useCreateWeightLog, getGetWeightLogsQueryKey, getGetProfileQueryKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Scale } from "lucide-react";
+import { ChevronDown, Loader2, Ruler, Scale } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import { todayString } from "@/lib/meals";
 
 interface AddWeightModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+// Body measurements the API stores alongside each weight log.
+export const MEASUREMENTS = [
+  { key: "waistCm", label: "Cintura" },
+  { key: "hipCm", label: "Cadera" },
+  { key: "chestCm", label: "Pecho" },
+  { key: "armCm", label: "Brazo" },
+  { key: "thighCm", label: "Muslo" },
+] as const;
+
+type MeasurementKey = (typeof MEASUREMENTS)[number]["key"];
+
+const EMPTY_MEASUREMENTS: Record<MeasurementKey, string> = { waistCm: "", hipCm: "", chestCm: "", armCm: "", thighCm: "" };
+
 export default function AddWeightModal({ open, onOpenChange }: AddWeightModalProps) {
-  const today = format(new Date(), "yyyy-MM-dd");
+  const today = todayString();
+  const [date, setDate] = useState(today);
   const [weight, setWeight] = useState("");
   const [notes, setNotes] = useState("");
+  const [showMeasurements, setShowMeasurements] = useState(false);
+  const [measurements, setMeasurements] = useState(EMPTY_MEASUREMENTS);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const createWeightLog = useCreateWeightLog();
 
-  const reset = () => { setWeight(""); setNotes(""); };
+  const reset = () => {
+    setDate(todayString());
+    setWeight("");
+    setNotes("");
+    setShowMeasurements(false);
+    setMeasurements(EMPTY_MEASUREMENTS);
+  };
 
   const handleSave = () => {
     const kg = parseFloat(weight);
@@ -31,12 +55,33 @@ export default function AddWeightModal({ open, onOpenChange }: AddWeightModalPro
       toast({ title: "Introduce un peso válido (20–400 kg)", variant: "destructive" });
       return;
     }
+    if (!date || date > today) {
+      toast({ title: "Elige una fecha que no sea futura", variant: "destructive" });
+      return;
+    }
+    const cm: Partial<Record<MeasurementKey, number>> = {};
+    for (const { key, label } of MEASUREMENTS) {
+      const raw = measurements[key].trim();
+      if (!raw) continue;
+      const value = parseFloat(raw);
+      if (!value || value < 10 || value > 300) {
+        toast({ title: `${label}: introduce un valor entre 10 y 300 cm`, variant: "destructive" });
+        return;
+      }
+      cm[key] = value;
+    }
+
     createWeightLog.mutate(
-      { data: { date: today, weightKg: kg, notes: notes || undefined } },
+      { data: { date, weightKg: kg, notes: notes || undefined, ...cm } },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetWeightLogsQueryKey() });
-          toast({ title: "Peso registrado", description: `${kg} kg — ${today}` });
+          // The latest weight updates the profile, and with it the calorie goal.
+          queryClient.invalidateQueries({ queryKey: getGetProfileQueryKey() });
+          queryClient.invalidateQueries({
+            predicate: (q) => typeof q.queryKey[0] === "string" && q.queryKey[0].startsWith("/api/dashboard"),
+          });
+          toast({ title: "Peso registrado", description: `${kg} kg · ${format(parseISO(date), "d 'de' MMMM", { locale: es })}` });
           reset();
           onOpenChange(false);
         },
@@ -48,7 +93,7 @@ export default function AddWeightModal({ open, onOpenChange }: AddWeightModalPro
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) reset(); onOpenChange(v); }}>
-      <DialogContent className="max-w-md rounded-3xl p-6">
+      <DialogContent className="max-w-md rounded-3xl p-6 max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-serif flex items-center gap-2">
             <Scale size={20} className="text-primary" />
@@ -61,6 +106,7 @@ export default function AddWeightModal({ open, onOpenChange }: AddWeightModalPro
             <label className="text-sm font-medium mb-1.5 block">Peso (kg)</label>
             <Input
               type="number"
+              inputMode="decimal"
               step="0.1"
               value={weight}
               onChange={(e) => setWeight(e.target.value)}
@@ -70,6 +116,48 @@ export default function AddWeightModal({ open, onOpenChange }: AddWeightModalPro
             />
           </div>
           <div>
+            <label className="text-sm font-medium mb-1.5 block" htmlFor="weight-date">Fecha</label>
+            <Input
+              id="weight-date"
+              type="date"
+              value={date}
+              max={today}
+              onChange={(e) => setDate(e.target.value)}
+              className="bg-secondary/30 border-none rounded-xl h-12"
+            />
+          </div>
+
+          <div className="bg-secondary/20 rounded-2xl">
+            <button
+              type="button"
+              onClick={() => setShowMeasurements(!showMeasurements)}
+              className="w-full flex items-center justify-between px-4 h-12 text-sm font-medium"
+              aria-expanded={showMeasurements}
+            >
+              <span className="flex items-center gap-2"><Ruler size={16} className="text-primary" /> Medidas corporales (opcional)</span>
+              <ChevronDown size={16} className={cn("transition-transform", showMeasurements && "rotate-180")} />
+            </button>
+            {showMeasurements && (
+              <div className="grid grid-cols-2 gap-3 px-4 pb-4">
+                {MEASUREMENTS.map(({ key, label }) => (
+                  <div key={key}>
+                    <label className="text-xs text-muted-foreground mb-1 block" htmlFor={key}>{label} (cm)</label>
+                    <Input
+                      id={key}
+                      type="number"
+                      inputMode="decimal"
+                      step="0.5"
+                      value={measurements[key]}
+                      onChange={(e) => setMeasurements({ ...measurements, [key]: e.target.value })}
+                      className="bg-background border-none rounded-xl h-11"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
             <label className="text-sm font-medium mb-1.5 block">Notas (opcional)</label>
             <Input
               value={notes}
@@ -78,9 +166,6 @@ export default function AddWeightModal({ open, onOpenChange }: AddWeightModalPro
               className="bg-secondary/30 border-none rounded-xl h-12"
             />
           </div>
-          <p className="text-xs text-muted-foreground text-center">
-            Fecha: {format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}
-          </p>
         </div>
 
         <Button

@@ -8,15 +8,15 @@ Built with the help of Replit's AI agent: I defined the features, reviewed the r
 
 ## Features
 
-- **Daily log**: 6 meal slots (desayuno, almuerzo, comida, merienda, cena, snacks)
+- **Daily log**: 6 meal slots (desayuno, almuerzo, comida, merienda, cena, snacks), for today or any past day from the calendar
 - **Food database**: search, category filters with emojis, and a grouped view
 - **Barcode scanner**: identifies packaged foods instantly with the camera (Open Food Facts)
 - **AI photo analysis**: photograph a plate and the AI estimates calories and macros for each food (OpenAI GPT)
-- **Custom recipes**: build recipes from foods in the database, with per-serving nutrition
-- **Harris-Benedict calculator**: works out your calorie goal from your body data and activity level
+- **Custom recipes**: build recipes from foods in the database, with per-serving nutrition, and log them by servings
+- **Harris-Benedict calculator**: works out your calorie goal from your body data and activity level, with an optional acceptable range
 - **Monthly calendar**: daily adherence with colour coding (green/amber/red) and your best streak
 - **Exercise tracking**: log physical activity and calories burned
-- **Weight tracking**: body weight history and chart
+- **Weight and body measurements**: weight history and chart, plus waist, hip, chest, arm and thigh
 - **AI summaries**: weekly and monthly analysis with a score, observations and personalised recommendations
 - **Statistics**: calorie, macro and weight progress charts
 
@@ -135,7 +135,8 @@ The app runs locally, with PostgreSQL in Docker. It doesn't have a published ver
 - [x] Daily AI usage limit
 - [x] Installable PWA with a service worker
 - [ ] Deploy the API, database and front end to a host
-- [ ] Add recipes to the diary from the interface (the API already supports it)
+- [x] Log recipes, past days and body measurements from the interface
+- [x] Continuous integration: typecheck, build and generated-code check on every push
 - [ ] Store food photos in file storage
 <!-- Add your planned improvements here -->
 

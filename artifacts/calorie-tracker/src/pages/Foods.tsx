@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import CreateFoodModal from "@/components/CreateFoodModal";
 import LogEntryModal from "@/components/LogEntryModal";
+import LogTargetBanner from "@/components/LogTargetBanner";
+import { useLogTarget } from "@/lib/meals";
 import type { Food } from "@workspace/api-client-react";
 import { cn } from "@/lib/utils";
 import { FOOD_CATEGORIES, getCategoryEmoji, inferCategory } from "@workspace/shared";
@@ -96,6 +98,7 @@ function CategoryChips({ selected, onChange }: { selected: string | null; onChan
 // ─── Main Foods page ──────────────────────────────────────────────────────────
 
 export default function Foods() {
+  const target = useLogTarget();
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -149,6 +152,8 @@ export default function Foods() {
           <Plus size={20} />
         </Button>
       </div>
+
+      <LogTargetBanner target={target} basePath="/alimentos" switchTo={{ href: "/recetas", label: "¿Es una receta? Elígela en Recetas" }} />
 
       {/* Search */}
       <div className="relative mb-4">
@@ -234,6 +239,9 @@ export default function Foods() {
           food={selectedFood}
           open={!!selectedFood}
           onOpenChange={(open) => !open && setSelectedFood(null)}
+          date={target.date}
+          dateLabel={target.dateLabel}
+          defaultMeal={target.meal}
         />
       )}
     </div>
