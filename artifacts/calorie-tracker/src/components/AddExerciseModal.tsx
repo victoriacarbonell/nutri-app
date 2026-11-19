@@ -72,8 +72,8 @@ export default function AddExerciseModal({ open, onOpenChange, date }: AddExerci
         data: {
           name: name.trim(),
           date: today,
-          durationMinutes: parseInt(duration) || undefined,
-          caloriesBurned: parseInt(calories) || 0,
+          durationMinutes: Math.round(Number(duration)) || undefined,
+          caloriesBurned: Math.round(Number(calories)),
         },
       },
       {
@@ -178,7 +178,7 @@ export default function AddExerciseModal({ open, onOpenChange, date }: AddExerci
         <Button
           className="w-full h-14 rounded-2xl text-base bg-orange-500 hover:bg-orange-600 text-white shadow-md shadow-orange-200"
           onClick={handleSave}
-          disabled={createExercise.isPending || !name.trim()}
+          disabled={createExercise.isPending || !name.trim() || !(Number(calories) > 0)}
         >
           {createExercise.isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
           Guardar ejercicio

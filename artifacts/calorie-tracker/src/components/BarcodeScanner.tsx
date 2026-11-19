@@ -27,7 +27,6 @@ type ScanState = "idle" | "scanning" | "found" | "looking_up" | "not_found" | "e
 async function lookupBarcode(barcode: string): Promise<OffProductInfo> {
   const resp = await fetch(
     `https://world.openfoodfacts.org/api/v0/product/${barcode}.json`,
-    { headers: { "User-Agent": "CalorApp/1.0" } }
   );
   if (!resp.ok) throw new Error("Network error");
   const data = await resp.json();
@@ -152,7 +151,7 @@ export default function BarcodeScanner({ onResult, onClose }: BarcodeScannerProp
 
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
-      <div className="flex items-center justify-between px-4 pt-safe-top pt-10 pb-4 bg-black/80 backdrop-blur-sm">
+      <div className="flex items-center justify-between px-4 pt-[max(2.5rem,env(safe-area-inset-top))] pb-4 bg-black/80 backdrop-blur-sm">
         <h2 className="text-white font-semibold text-lg">Escáner de código de barras</h2>
         <button onClick={handleClose} className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
           <X size={20} className="text-white" />
@@ -233,7 +232,7 @@ export default function BarcodeScanner({ onResult, onClose }: BarcodeScannerProp
       </div>
 
       {state === "found" && product && (
-        <div className="bg-white rounded-t-3xl px-6 pt-6 pb-safe-bottom pb-8 shadow-2xl animate-slide-up">
+        <div className="bg-white rounded-t-3xl px-6 pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] shadow-2xl animate-slide-up">
           <div className="flex gap-4 items-start mb-5">
             {product.imageUrl ? (
               <img src={product.imageUrl} alt={product.name} className="w-20 h-20 rounded-2xl object-contain bg-gray-50 border border-gray-100 shrink-0" />

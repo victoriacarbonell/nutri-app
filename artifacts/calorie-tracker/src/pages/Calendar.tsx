@@ -190,6 +190,14 @@ export default function Calendar() {
   // Monthly stats
   const logsThisMonth = calendarDays?.filter(d => d.hasLog) ?? [];
   const onTrack = logsThisMonth.filter(d => d.status === "on_track").length;
+  // Racha más larga de días consecutivos en objetivo (el API devuelve todos los días del mes en orden).
+  const bestStreak = (calendarDays ?? []).reduce(
+    (acc, d) => {
+      const run = d.status === "on_track" ? acc.run + 1 : 0;
+      return { run, best: Math.max(acc.best, run) };
+    },
+    { run: 0, best: 0 },
+  ).best;
   const over    = logsThisMonth.filter(d => d.status === "over").length;
   const under   = logsThisMonth.filter(d => d.status === "under").length;
   const avgCals = logsThisMonth.length > 0
@@ -332,8 +340,8 @@ export default function Calendar() {
                   <Flame size={22} className="text-emerald-600" />
                 </div>
                 <div>
-                  <div className="text-2xl font-serif font-medium">{onTrack} días</div>
-                  <div className="text-xs text-muted-foreground">en el objetivo este mes</div>
+                  <div className="text-2xl font-serif font-medium">{bestStreak} {bestStreak === 1 ? "día" : "días"}</div>
+                  <div className="text-xs text-muted-foreground">seguidos en el objetivo este mes</div>
                 </div>
               </div>
             </div>

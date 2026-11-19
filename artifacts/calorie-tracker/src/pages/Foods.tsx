@@ -133,8 +133,10 @@ export default function Foods() {
 
   const sortedCategories = groupedFoods
     ? Object.keys(groupedFoods).sort((a, b) => {
+        // indexOf devuelve -1 (no undefined) si no la conoce: esas van al final.
         const order = FOOD_CATEGORIES.map(c => c.value);
-        return (order.indexOf(a) ?? 99) - (order.indexOf(b) ?? 99);
+        const rank = (c: string) => (order.indexOf(c) === -1 ? order.length : order.indexOf(c));
+        return rank(a) - rank(b);
       })
     : [];
 

@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
+import { es } from "date-fns/locale";
 
 interface AddWeightModalProps {
   open: boolean;
@@ -78,7 +79,7 @@ export default function AddWeightModal({ open, onOpenChange }: AddWeightModalPro
             />
           </div>
           <p className="text-xs text-muted-foreground text-center">
-            Fecha: {format(new Date(), "d 'de' MMMM, yyyy")}
+            Fecha: {format(new Date(), "d 'de' MMMM, yyyy", { locale: es })}
           </p>
         </div>
 

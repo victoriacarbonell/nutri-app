@@ -14,7 +14,7 @@ import { apiErrorMessage } from "@/lib/api-errors";
 type Period = "weekly" | "monthly";
 
 function ScoreBadge({ score }: { score?: number | null }) {
-  if (!score) return null;
+  if (score == null) return null;
   const color =
     score >= 80 ? "bg-emerald-100 text-emerald-700 border-emerald-200" :
     score >= 60 ? "bg-amber-100 text-amber-700 border-amber-200" :
@@ -39,7 +39,7 @@ function SummaryCard({ period }: { period: Period }) {
 
   const { data, isLoading, isFetching, refetch, error } = period === "weekly" ? weekly : monthly;
 
-  if (isLoading || isFetching) {
+  if (isLoading) {
     return (
       <div className="space-y-5">
         <div className="bg-card rounded-3xl p-6 border shadow-sm space-y-4">
@@ -86,9 +86,11 @@ function SummaryCard({ period }: { period: Period }) {
             <ScoreBadge score={data.score} />
             <button
               onClick={() => refetch()}
+              disabled={isFetching}
+              aria-label="Volver a generar"
               className="w-8 h-8 rounded-full bg-background/80 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
             >
-              <RefreshCw size={14} />
+              <RefreshCw size={14} className={cn(isFetching && "animate-spin")} />
             </button>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useGetRecipes, getGetRecipesQueryKey } from "@workspace/api-client-react";
 import { Search, Plus, ChefHat } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -10,10 +10,16 @@ import { formatKcal, formatGrams } from "@/lib/format";
 export default function Recipes() {
   const [search, setSearch] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  // Espera a que se deje de escribir antes de buscar (antes, una petición por tecla).
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(timer);
+  }, [search]);
 
   const { data: recipes, isLoading } = useGetRecipes(
-    { q: search },
-    { query: { queryKey: getGetRecipesQueryKey({ q: search }) } }
+    { q: debouncedSearch },
+    { query: { queryKey: getGetRecipesQueryKey({ q: debouncedSearch }) } }
   );
 
   return (

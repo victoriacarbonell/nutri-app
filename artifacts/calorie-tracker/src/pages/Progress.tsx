@@ -17,8 +17,8 @@ export default function Progress() {
   const { toast } = useToast();
 
   const { data: weightLogs, isLoading } = useGetWeightLogs(
-    { limit: 30 },
-    { query: { queryKey: getGetWeightLogsQueryKey({ limit: 30 }) } }
+    { limit: 365 },
+    { query: { queryKey: getGetWeightLogsQueryKey({ limit: 365 }) } }
   );
 
   const deleteWeightLog = useDeleteWeightLog();

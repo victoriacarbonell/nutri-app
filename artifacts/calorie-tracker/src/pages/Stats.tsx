@@ -1,10 +1,8 @@
-import { useState } from "react";
 import { useGetWeeklyStats, getGetWeeklyStatsQueryKey } from "@workspace/api-client-react";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid, ReferenceLine } from "recharts";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Info } from "lucide-react";
 
 export default function Stats() {
   // Fecha local del cliente: así "hoy" es el del usuario y no el del servidor.
@@ -31,11 +29,13 @@ export default function Stats() {
     objetivo: day.calorieGoal,
   })) || [];
 
+  // El anillo reparte las calorías (4 / 4 / 9 kcal por gramo); la leyenda muestra los gramos.
   const pieData = [
-    { name: 'Proteínas', value: stats?.avgProtein || 0, color: 'hsl(var(--chart-1))' },
-    { name: 'Carbohidratos', value: stats?.avgCarbs || 0, color: 'hsl(var(--chart-3))' },
-    { name: 'Grasas', value: stats?.avgFat || 0, color: 'hsl(var(--chart-2))' },
+    { name: 'Proteínas', grams: stats?.avgProtein || 0, value: (stats?.avgProtein || 0) * 4, color: 'hsl(var(--chart-1))' },
+    { name: 'Carbohidratos', grams: stats?.avgCarbs || 0, value: (stats?.avgCarbs || 0) * 4, color: 'hsl(var(--chart-3))' },
+    { name: 'Grasas', grams: stats?.avgFat || 0, value: (stats?.avgFat || 0) * 9, color: 'hsl(var(--chart-2))' },
   ];
+  const calorieGoal = stats?.dailyData[0]?.calorieGoal;
 
   return (
     <div className="min-h-[100dvh] bg-background pt-8 px-4 pb-24">
@@ -65,6 +65,9 @@ export default function Stats() {
                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
               />
               <Bar dataKey="calorias" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              {calorieGoal ? (
+                <ReferenceLine y={calorieGoal} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" label={{ value: "Objetivo", position: "insideTopRight", fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+              ) : null}
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -101,7 +104,7 @@ export default function Stats() {
                   <span className="text-sm font-medium">{entry.name}</span>
                 </div>
                 <div className="text-2xl font-semibold pl-5">
-                  {Math.round(entry.value)}<span className="text-sm font-normal text-muted-foreground">g</span>
+                  {Math.round(entry.grams)}<span className="text-sm font-normal text-muted-foreground">g</span>
                 </div>
               </div>
             ))}

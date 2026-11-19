@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { FoodAnalysisResult } from "@workspace/api-client-react";
 import { inferCategory, scaleMacros, sumMacros } from "@workspace/shared";
 import { apiErrorMessage } from "@/lib/api-errors";
+import { downscaleImage } from "@/lib/image";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -96,12 +97,19 @@ export default function Scan() {
     queryClient.invalidateQueries({ queryKey: getGetFoodsQueryKey() });
   };
 
-  const handleImageCapture = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    // Permite volver a seleccionar la misma foto.
+    e.target.value = "";
     if (!file) return;
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
+    let base64String: string;
+    try {
+      base64String = await downscaleImage(file);
+    } catch {
+      toast({ title: "No se pudo leer la imagen", description: "Prueba con otra foto.", variant: "destructive" });
+      return;
+    }
+    {
       setImagePreview(base64String);
       setAnalysisResult(null);
       setAnalysisItems([]);
@@ -125,10 +133,7 @@ export default function Scan() {
             toast({ title: "Error al analizar", description: apiErrorMessage(err, "No pudimos analizar la imagen. Intenta de nuevo."), variant: "destructive" }),
         }
       );
-    };
-    reader.readAsDataURL(file);
-    // Permite volver a seleccionar la misma foto.
-    e.target.value = "";
+    }
   };
 
   const resetAI = () => {

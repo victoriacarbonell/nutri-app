@@ -174,7 +174,8 @@ export default function Home() {
                         <span className="font-medium">{formatKcal(entry.calories)} kcal</span>
                         <button
                           onClick={() => handleDeleteEntry(entry.id)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                          aria-label="Eliminar"
+                          className="p-1 -m-1 opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                         >
                           <Trash2 size={13} />
                         </button>
@@ -211,7 +212,8 @@ export default function Home() {
                       <span className="font-medium text-orange-500">{exercise.caloriesBurned} kcal</span>
                       <button
                         onClick={() => handleDeleteExercise(exercise.id)}
-                        className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                        aria-label="Eliminar"
+                          className="p-1 -m-1 opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                       >
                         <Trash2 size={13} />
                       </button>

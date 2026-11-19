@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { Home, Apple, BookOpen, Calendar, User, MoreHorizontal, Camera, BarChart2, TrendingUp, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -5,6 +6,11 @@ import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle } from "@/co
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const closeMore = () => setMoreOpen(false);
+  // Páginas a las que se llega desde "Más": con ellas abiertas, "Más" se marca activo.
+  const morePaths = ["/recetas", "/progreso", "/estadisticas", "/ia", "/perfil"];
+  const isMoreActive = morePaths.includes(location);
 
   const navItems = [
     { href: "/", icon: Home, label: "Hoy" },
@@ -15,12 +21,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex flex-col min-h-[100dvh] bg-background">
-      <main className="flex-1 pb-[84px] max-w-md mx-auto w-full relative">
+      <main className="flex-1 pb-[calc(84px+env(safe-area-inset-bottom))] max-w-md mx-auto w-full relative">
         {children}
       </main>
 
       {/* Bottom Nav */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-50 pb-safe">
+      <nav className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-[0_-4px_20px_rgba(0,0,0,0.03)] z-50 pb-[env(safe-area-inset-bottom)]">
         <div className="max-w-md mx-auto flex items-center justify-around h-[68px] px-2">
           {navItems.map((item) => {
             const isActive = location === item.href;
@@ -51,11 +57,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             );
           })}
 
-          <Sheet>
+          <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
             <SheetTrigger asChild>
-              <button className="flex flex-col items-center justify-center w-[64px] h-[64px] rounded-2xl text-muted-foreground hover:bg-muted/50 transition-colors">
+              <button className={cn(
+                "flex flex-col items-center justify-center w-[64px] h-[64px] rounded-2xl transition-colors",
+                isMoreActive ? "text-primary" : "text-muted-foreground hover:bg-muted/50"
+              )}>
                 <MoreHorizontal size={24} className="mb-1" />
-                <span className="text-[10px] font-medium">Más</span>
+                <span className={cn("text-[10px] font-medium", isMoreActive && "font-bold")}>Más</span>
               </button>
             </SheetTrigger>
             <SheetContent side="bottom" className="rounded-t-3xl max-w-md mx-auto">
@@ -63,23 +72,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <SheetTitle>Más opciones</SheetTitle>
               </SheetHeader>
               <div className="grid grid-cols-3 gap-4 pb-8">
-                <Link href="/recetas" className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors">
+                <Link href="/recetas" onClick={closeMore} className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors">
                   <BookOpen size={28} />
                   <span className="text-xs font-medium">Recetas</span>
                 </Link>
-                <Link href="/progreso" className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors">
+                <Link href="/progreso" onClick={closeMore} className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors">
                   <TrendingUp size={28} />
                   <span className="text-xs font-medium">Progreso</span>
                 </Link>
-                <Link href="/estadisticas" className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors">
+                <Link href="/estadisticas" onClick={closeMore} className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors">
                   <BarChart2 size={28} />
                   <span className="text-xs font-medium">Estadísticas</span>
                 </Link>
-                <Link href="/ia" className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-primary/10 border border-primary/20 text-primary hover:bg-primary/15 transition-colors col-span-3">
+                <Link href="/ia" onClick={closeMore} className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-primary/10 border border-primary/20 text-primary hover:bg-primary/15 transition-colors col-span-3">
                   <Sparkles size={28} />
                   <span className="text-sm font-semibold">Análisis con IA</span>
                 </Link>
-                <Link href="/perfil" className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors col-span-3">
+                <Link href="/perfil" onClick={closeMore} className="flex flex-col items-center gap-3 p-4 rounded-2xl bg-secondary/50 text-secondary-foreground hover:bg-secondary transition-colors col-span-3">
                   <User size={24} />
                   <span className="text-sm font-medium">Mi Perfil & Objetivos</span>
                 </Link>
