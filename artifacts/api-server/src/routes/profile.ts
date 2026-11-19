@@ -40,7 +40,7 @@ router.get("/", async (req, res) => {
 
 router.put("/", async (req, res) => {
   const body = UpdateProfileBody.parse(req.body);
-  // Un perfil por usuario (user_id es único): crea o actualiza.
+  // One profile per user (user_id is unique): create or update.
   const [profile] = await db.insert(userProfileTable)
     .values({ ...body, userId: req.userId, updatedAt: new Date() })
     .onConflictDoUpdate({
@@ -51,8 +51,8 @@ router.put("/", async (req, res) => {
   res.json({ ...profile, calculatedCalorieGoal: calcHarrisBenedict(profile) });
 });
 
-// Objetivo calórico del usuario: el manual si lo ha puesto, si no el de
-// Harris-Benedict, y 2000 kcal si todavía no tiene perfil.
+// The user's calorie goal: the manual one if set, otherwise Harris-Benedict,
+// and 2000 kcal when there's no profile yet.
 async function getCalorieGoal(userId: number): Promise<{ goal: number; min: number | null; max: number | null; profileSetup: boolean }> {
   const profile = await getProfile(userId);
   if (!profile) return { goal: 2000, min: null, max: null, profileSetup: false };

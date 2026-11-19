@@ -5,8 +5,8 @@ import { HealthCheckResponse } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
-// Sano solo si la base de datos responde: así el hosting no manda tráfico a
-// una instancia que no puede servir nada.
+// Healthy only if the database responds, so the host doesn't send traffic to
+// an instance that can't serve anything.
 router.get("/healthz", async (req, res) => {
   try {
     await db.execute(sql`select 1`);

@@ -90,7 +90,7 @@ router.get("/calendar/:year/:month", async (req, res) => {
   res.json(result);
 });
 
-// Estadísticas de los últimos `daysBack` días, terminando en `endDate` incluido.
+// Stats for the last `daysBack` days, ending on `endDate` inclusive.
 async function getPeriodStats(userId: number, daysBack: number, endDate: string) {
   const startDate = addDays(endDate, -daysBack + 1);
   const { goal, min, max } = await getCalorieGoal(userId);

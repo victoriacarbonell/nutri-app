@@ -35,7 +35,7 @@ const MEAL_TYPES = [
 
 type MealType = (typeof MEAL_TYPES)[number]["value"];
 
-// Cada alimento detectado por la IA, con los gramos editables por el usuario.
+// Each food detected by the AI, with grams the user can edit.
 interface AnalyzedItemState {
   name: string;
   grams: string;
@@ -51,7 +51,7 @@ interface AddBarcodeItemState {
   mealType: MealType;
 }
 
-// Mismo cálculo que hace el API al guardar.
+// Same calculation the API does when saving.
 function itemTotals(items: AnalyzedItemState[]) {
   return sumMacros(items.map((item) => scaleMacros(item, parseFloat(item.grams) || 0)));
 }
@@ -99,7 +99,7 @@ export default function Scan() {
 
   const handleImageCapture = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    // Permite volver a seleccionar la misma foto.
+    // Lets the user pick the same photo again.
     e.target.value = "";
     if (!file) return;
     let base64String: string;
@@ -152,9 +152,9 @@ export default function Scan() {
     setAnalysisItems((items) => items.filter((_, i) => i !== index));
   };
 
-  // Guarda cada alimento detectado como un alimento propio y lo añade al
-  // diario con sus gramos. La foto no se guarda: en base64 pesa cientos de KB
-  // por alimento y acabaría en la base de datos.
+  // Saves each detected food as one of the user's foods and adds it to the
+  // diary with its grams. The photo isn't saved: as base64 it weighs hundreds
+  // of KB per food and would end up in the database.
   const handleAddAnalysisFoods = async () => {
     if (isSaving) return;
     const today = format(new Date(), "yyyy-MM-dd");
@@ -209,8 +209,8 @@ export default function Scan() {
     setBarcodeItem({ product, amount: "100", mealType: "almuerzo" });
   };
 
-  // Si el producto ya existe (mismo código de barras) se reutiliza en vez de
-  // crear un duplicado en cada escaneo.
+  // If the product already exists (same barcode) it's reused instead of
+  // creating a duplicate on every scan.
   const handleAddBarcodeFood = async () => {
     if (!barcodeItem || isSaving) return;
     const today = format(new Date(), "yyyy-MM-dd");

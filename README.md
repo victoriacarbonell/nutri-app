@@ -1,171 +1,175 @@
 # NutriApp 🥗
 
-> 🚧 **Proyecto en curso.** La app nació en Replit y ahora se desarrolla en local. Todavía no está publicada.
+> 🚧 **Work in progress.** The app started on Replit and is now developed locally. It hasn't been published yet.
 
-Aplicación móvil progresiva (PWA) para el seguimiento de calorías y nutrición, diseñada para iPhone y Android. Interfaz completamente en español con paleta de colores pastel y navegación optimizada para pantallas táctiles.
+A progressive web app (PWA) for tracking calories and nutrition, designed for iPhone and Android. The interface is fully in Spanish, with a pastel colour palette and navigation built for touch screens.
 
-Desarrollada con ayuda del agente de IA de Replit: yo definí las funcionalidades, revisé el resultado y fui iterando sobre él.
+Built with the help of Replit's AI agent: I defined the features, reviewed the result and iterated on it.
 
-## Características
+## Features
 
-- **Registro diario** — 6 franjas horarias de comida (desayuno, almuerzo, comida, merienda, cena, snacks)
-- **Base de datos de alimentos** — búsqueda, filtrado por categoría con emojis y vista agrupada
-- **Escáner de código de barras** — identifica alimentos al instante con la cámara
-- **Análisis IA de fotos** — fotografía un plato y la IA estima las calorías y macros (powered by OpenAI GPT)
-- **Recetas personalizadas** — crea tus propias recetas con ingredientes de la base de datos
-- **Calculadora Harris-Benedict** — calcula tu objetivo calórico según tus datos físicos y nivel de actividad
-- **Calendario mensual** — visualiza tu adherencia diaria con código de colores (verde/ámbar/rojo)
-- **Seguimiento de ejercicio** — registra actividad física y calorías quemadas
-- **Seguimiento de peso y medidas** — historial de peso corporal y medidas
-- **Resúmenes IA** — análisis semanal y mensual con puntuación, observaciones y recomendaciones personalizadas
-- **Estadísticas** — gráficos de progreso de calorías, macros y peso
+- **Daily log**: 6 meal slots (desayuno, almuerzo, comida, merienda, cena, snacks)
+- **Food database**: search, category filters with emojis, and a grouped view
+- **Barcode scanner**: identifies packaged foods instantly with the camera (Open Food Facts)
+- **AI photo analysis**: photograph a plate and the AI estimates calories and macros for each food (OpenAI GPT)
+- **Custom recipes**: build recipes from foods in the database, with per-serving nutrition
+- **Harris-Benedict calculator**: works out your calorie goal from your body data and activity level
+- **Monthly calendar**: daily adherence with colour coding (green/amber/red) and your best streak
+- **Exercise tracking**: log physical activity and calories burned
+- **Weight tracking**: body weight history and chart
+- **AI summaries**: weekly and monthly analysis with a score, observations and personalised recommendations
+- **Statistics**: calorie, macro and weight progress charts
 
-## Capturas
+## Screenshots
 
-Capturas en tamaño móvil con datos de demostración.
+Mobile-size screenshots with demo data. The app's interface is in Spanish.
 
 | | | |
 |:-:|:-:|:-:|
-| <img src="docs/screenshots/02-hoy.png" width="220" alt="Hoy"> | <img src="docs/screenshots/03-alimentos.png" width="220" alt="Alimentos"> | <img src="docs/screenshots/04-recetas.png" width="220" alt="Recetas"> |
-| **Hoy**<br>Calorías restantes, macros del día y comidas por franja | **Alimentos**<br>Base de alimentos agrupada por categoría | **Recetas**<br>Recetas con kcal y macros por porción |
-| <img src="docs/screenshots/05-calendario.png" width="220" alt="Calendario"> | <img src="docs/screenshots/06-estadisticas.png" width="220" alt="Estadísticas"> | <img src="docs/screenshots/07-progreso.png" width="220" alt="Progreso"> |
-| **Calendario**<br>Adherencia diaria al objetivo por colores | **Estadísticas**<br>Calorías de la semana y reparto de macros | **Progreso**<br>Evolución del peso |
-| <img src="docs/screenshots/08-escanear.png" width="220" alt="Escanear"> | <img src="docs/screenshots/09-perfil.png" width="220" alt="Perfil"> | <img src="docs/screenshots/01-login.png" width="220" alt="Acceso"> |
-| **Escanear**<br>Análisis de fotos con IA y código de barras | **Perfil**<br>Datos personales y objetivo Harris-Benedict | **Acceso**<br>Inicio de sesión y registro |
+| <img src="docs/screenshots/02-hoy.png" width="220" alt="Today"> | <img src="docs/screenshots/03-alimentos.png" width="220" alt="Foods"> | <img src="docs/screenshots/04-recetas.png" width="220" alt="Recipes"> |
+| **Today** (Hoy)<br>Calories left, today's macros and meals by slot | **Foods** (Alimentos)<br>Food database grouped by category | **Recipes** (Recetas)<br>Recipes with kcal and macros per serving |
+| <img src="docs/screenshots/05-calendario.png" width="220" alt="Calendar"> | <img src="docs/screenshots/06-estadisticas.png" width="220" alt="Statistics"> | <img src="docs/screenshots/07-progreso.png" width="220" alt="Progress"> |
+| **Calendar** (Calendario)<br>Daily adherence to the goal, colour-coded | **Statistics** (Estadísticas)<br>Calories for the week and macro split | **Progress** (Progreso)<br>Weight over time |
+| <img src="docs/screenshots/08-escanear.png" width="220" alt="Scan"> | <img src="docs/screenshots/09-perfil.png" width="220" alt="Profile"> | <img src="docs/screenshots/01-login.png" width="220" alt="Sign in"> |
+| **Scan** (Escanear)<br>AI photo analysis and barcode scanning | **Profile** (Perfil)<br>Personal data and Harris-Benedict goal | **Sign in** (Acceso)<br>Log in and sign up |
 
-## Tecnología
+## Tech stack
 
-| Capa | Stack |
-|------|-------|
-| Frontend | React + Vite + TypeScript |
+| Layer | Stack |
+|-------|-------|
+| Front end | React + Vite + TypeScript |
 | UI | Tailwind CSS + shadcn/ui |
-| Backend | Express 5 + Node.js |
-| Base de datos | PostgreSQL + Drizzle ORM |
-| IA | OpenAI GPT (análisis de imagen y resúmenes) |
+| Back end | Express 5 + Node.js |
+| Database | PostgreSQL + Drizzle ORM |
+| AI | OpenAI GPT (image analysis and summaries) |
 | API | OpenAPI 3 + React Query (Orval codegen) |
 | Monorepo | pnpm workspaces |
 
-## Estructura del proyecto
+## Project structure
 
 ```
 ├── artifacts/
-│   ├── calorie-tracker/     # Frontend React (PWA)
-│   └── api-server/          # Backend Express API
+│   ├── calorie-tracker/     # React front end (PWA)
+│   └── api-server/          # Express API back end
 ├── lib/
-│   ├── api-client-react/    # Hooks generados (React Query)
-│   ├── api-spec/            # Especificación OpenAPI + Orval config
-│   ├── api-zod/             # Schemas Zod generados
-│   ├── db/                  # Schema Drizzle, migraciones y cliente PostgreSQL
-│   ├── shared/              # Categorías de alimentos y cálculo de macros (API y front)
-│   └── integrations-openai-ai-server/  # Cliente OpenAI
-└── scripts/                 # Scripts de utilidad
+│   ├── api-client-react/    # Generated hooks (React Query)
+│   ├── api-spec/            # OpenAPI spec + Orval config
+│   ├── api-zod/             # Generated Zod schemas
+│   ├── db/                  # Drizzle schema, migrations and PostgreSQL client
+│   ├── shared/              # Food categories and macro maths (API and front end)
+│   └── integrations-openai-ai-server/  # OpenAI client
+└── scripts/                 # Utility scripts
 ```
 
-## Desarrollo local
+## Local development
 
-Requiere Node.js 22.9+, pnpm 10+ y PostgreSQL 16 (con Docker basta `pnpm db:up`).
+Requires Node.js 22.9+, pnpm 11+ and PostgreSQL 16 (with Docker, `pnpm db:up` is enough).
 
 ```bash
-# 1. Instalar dependencias
+# 1. Install dependencies
 pnpm install
 
-# 2. Configurar el entorno
-cp .env.example .env        # en PowerShell: Copy-Item .env.example .env
+# 2. Set up the environment
+cp .env.example .env        # in PowerShell: Copy-Item .env.example .env
 
-# 3. Base de datos: arrancar PostgreSQL y aplicar las migraciones
+# 3. Database: start PostgreSQL and apply the migrations
 pnpm db:up
 pnpm db:migrate
 
-# 4. Arrancar API y front, cada uno en una terminal
+# 4. Start the API and the front end, each in its own terminal
 pnpm dev:api                # http://localhost:8080
 pnpm dev:web                # http://localhost:5173
 ```
 
-El front llama a `/api` y Vite lo redirige al API (`API_URL`, por defecto `http://localhost:8080`).
+The front end calls `/api` and Vite proxies it to the API (`API_URL`, `http://localhost:8080` by default).
 
-Tras cambiar la especificación OpenAPI:
+The Docker database listens on port 5433, so it doesn't clash with a PostgreSQL installed on the machine, which usually takes 5432.
+
+After changing the OpenAPI spec:
 
 ```bash
 pnpm --filter @workspace/api-spec run codegen
 ```
 
-Tras cambiar el esquema de la base de datos (`lib/db/src/schema`):
+After changing the database schema (`lib/db/src/schema`):
 
 ```bash
-pnpm db:generate   # crea la migración SQL en lib/db/migrations
-pnpm db:migrate    # la aplica a la base de datos
+pnpm db:generate   # creates the SQL migration in lib/db/migrations
+pnpm db:migrate    # applies it to the database
 ```
 
-Las migraciones se versionan en git; no se usa `drizzle-kit push`.
+Migrations are versioned in git; `drizzle-kit push` isn't used.
 
 ## PWA
 
-El front se instala como aplicación: `vite-plugin-pwa` genera el manifest y un service worker (Workbox) que precachea la app y guarda las últimas lecturas del API para abrirla sin conexión. Los iconos PNG están en `artifacts/calorie-tracker/public/icons`. En desarrollo el service worker no se registra; para probarlo:
+The front end installs as an app: `vite-plugin-pwa` generates the manifest and a service worker (Workbox) that precaches the app and keeps the latest API reads so it can open offline. The PNG icons are in `artifacts/calorie-tracker/public/icons`. The service worker isn't registered in development; to test it:
 
 ```bash
 pnpm --filter @workspace/calorie-tracker run build
-pnpm --filter @workspace/calorie-tracker run serve   # http://localhost:5173 con proxy a /api
+pnpm --filter @workspace/calorie-tracker run serve   # http://localhost:5173 with a proxy to /api
 ```
 
-## Cuentas y sesiones
+## Accounts and sessions
 
-Cada usuario se registra con email y contraseña (hash scrypt) y recibe una cookie de sesión `httpOnly` válida 30 días. Todos los datos (alimentos, recetas, diario, peso, perfil) pertenecen al usuario de la sesión. Con `SIGNUP_CODE` definido, el registro pide ese código.
+Each user signs up with an email and password (scrypt hash) and gets an `httpOnly` session cookie valid for 30 days. All data (foods, recipes, diary, weight, profile) belongs to the session's user. With `SIGNUP_CODE` set, sign-up asks for that code.
 
-## Variables de entorno
+## Environment variables
 
-| Variable | Descripción |
+| Variable | Description |
 |----------|-------------|
-| `DATABASE_URL` | Cadena de conexión PostgreSQL (obligatoria) |
-| `PORT` | Puerto del API (por defecto 8080) |
-| `OPENAI_API_KEY` | Clave de OpenAI. Opcional: sin ella, las funciones de IA responden 503 |
-| `OPENAI_MODEL` | Modelo de OpenAI (por defecto `gpt-5.1`) |
-| `AI_DAILY_LIMIT` | Llamadas a la IA por usuario y día (por defecto 20) |
-| `SIGNUP_CODE` | Opcional: código necesario para registrarse |
-| `CORS_ORIGIN` | Opcional: orígenes permitidos si el front vive en otro dominio |
+| `DATABASE_URL` | PostgreSQL connection string (required) |
+| `PORT` | API port (8080 by default) |
+| `OPENAI_API_KEY` | OpenAI key. Optional: without it, the AI features respond 503 |
+| `OPENAI_MODEL` | OpenAI model (`gpt-5.1` by default) |
+| `AI_DAILY_LIMIT` | AI calls per user per day (20 by default) |
+| `SIGNUP_CODE` | Optional: code required to sign up |
+| `CORS_ORIGIN` | Optional: allowed origins if the front end lives on another domain |
 
-## Estado y despliegue
+## Status and deployment
 
-La app se ejecuta en local, con PostgreSQL en Docker. Todavía no tiene una versión publicada.
+The app runs locally, with PostgreSQL in Docker. It doesn't have a published version yet.
 
-## Próximos pasos
+## Next steps
 
-- [x] Cuentas de usuario y sesiones
-- [x] Límite diario de uso de la IA
-- [x] PWA instalable con service worker
-- [ ] Desplegar API, base de datos y front en un hosting
-- [ ] Añadir recetas al diario desde la interfaz (el API ya lo permite)
-- [ ] Guardar las fotos de los alimentos en un almacenamiento de ficheros
-<!-- Añade aquí las mejoras que tengas pensadas -->
+- [x] User accounts and sessions
+- [x] Daily AI usage limit
+- [x] Installable PWA with a service worker
+- [ ] Deploy the API, database and front end to a host
+- [ ] Add recipes to the diary from the interface (the API already supports it)
+- [ ] Store food photos in file storage
+<!-- Add your planned improvements here -->
 
-## Rutas de la API
+## API routes
 
-Salvo `/api/healthz` y `/api/auth/*`, todas exigen sesión iniciada.
+Every route except `/api/healthz` and `/api/auth/*` requires a logged-in session.
 
-| Método | Ruta | Descripción |
-|--------|------|-------------|
-| POST | `/api/auth/register` | Crear cuenta e iniciar sesión |
-| POST | `/api/auth/login` | Iniciar sesión |
-| POST | `/api/auth/logout` | Cerrar sesión |
-| GET | `/api/auth/me` | Usuario de la sesión |
-| GET | `/api/foods` | Listado de alimentos (con filtros) |
-| POST | `/api/foods` | Crear alimento |
-| GET | `/api/logs/:date` | Registro del día |
-| POST | `/api/logs/:date/entries` | Añadir entrada al registro |
-| GET | `/api/dashboard/today` | Resumen del día actual |
-| GET | `/api/dashboard/calendar/:year/:month` | Vista mensual |
-| GET | `/api/dashboard/stats/weekly` y `/monthly` | Estadísticas de 7 y 30 días |
-| GET | `/api/profile` | Perfil del usuario |
-| PUT | `/api/profile` | Actualizar perfil |
-| GET/POST | `/api/weight` | Registros de peso |
-| GET/POST | `/api/exercises` | Ejercicios |
-| GET/POST | `/api/recipes` | Recetas |
-| POST | `/api/ai/analyze-image` | Análisis de foto con IA |
-| GET | `/api/ai/weekly-summary` | Resumen semanal IA |
-| GET | `/api/ai/monthly-summary` | Resumen mensual IA |
-| GET | `/api/ai/usage` | Usos de IA de hoy y límite |
+| Method | Route | Description |
+|--------|-------|-------------|
+| POST | `/api/auth/register` | Create an account and log in |
+| POST | `/api/auth/login` | Log in |
+| POST | `/api/auth/logout` | Log out |
+| GET | `/api/auth/me` | The session's user |
+| GET | `/api/foods` | List foods (with filters) |
+| POST | `/api/foods` | Create a food |
+| GET | `/api/logs/:date` | The day's log |
+| POST | `/api/logs/:date/entries` | Add an entry to the log |
+| GET | `/api/dashboard/today` | Today's summary |
+| GET | `/api/dashboard/calendar/:year/:month` | Month view |
+| GET | `/api/dashboard/stats/weekly` and `/monthly` | 7- and 30-day statistics |
+| GET | `/api/profile` | The user's profile |
+| PUT | `/api/profile` | Update the profile |
+| GET/POST | `/api/weight` | Weight logs |
+| GET/POST | `/api/exercises` | Exercises |
+| GET/POST | `/api/recipes` | Recipes |
+| POST | `/api/ai/analyze-image` | AI photo analysis |
+| GET | `/api/ai/weekly-summary` | Weekly AI summary |
+| GET | `/api/ai/monthly-summary` | Monthly AI summary |
+| GET | `/api/ai/usage` | Today's AI usage and limit |
 
-## Licencia
+The full contract, including error responses, is in [`lib/api-spec/openapi.yaml`](lib/api-spec/openapi.yaml).
 
-© Victoria Carbonell Sánchez. Todos los derechos reservados.
+## License
 
-Este repositorio es público como muestra de mi trabajo. No se concede permiso para usar, modificar ni distribuir el código. Las dependencias y los componentes de terceros conservan sus propias licencias.
+© Victoria Carbonell Sánchez. All rights reserved.
+
+This repository is public as a sample of my work. No permission is granted to use, modify or distribute the code. Third-party dependencies and components keep their own licenses. See [LICENSE](LICENSE).

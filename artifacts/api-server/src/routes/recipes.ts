@@ -16,8 +16,8 @@ const router = Router();
 
 type IngredientInput = { foodId: number; amountGrams: number };
 
-// Carga los alimentos de los ingredientes (solo los del usuario) y calcula
-// los totales de la receta con la misma función que usa el front.
+// Loads the ingredient foods (only the user's own) and computes the recipe
+// totals with the same function the front end uses.
 async function computeRecipe(userId: number, ingredients: IngredientInput[], servings: number) {
   const foodIds = [...new Set(ingredients.map((i) => i.foodId))];
   const foods = await db.select().from(foodsTable)

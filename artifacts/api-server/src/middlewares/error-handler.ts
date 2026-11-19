@@ -2,7 +2,7 @@ import type { ErrorRequestHandler, RequestHandler } from "express";
 import { ZodError } from "zod";
 import { HttpError } from "../lib/http-error";
 
-// Ruta /api desconocida: JSON en vez de la página HTML de Express.
+// Unknown /api route: JSON instead of Express's HTML page.
 export const notFoundHandler: RequestHandler = (req, res) => {
   res.status(404).json({ error: "not_found", message: `Ruta no encontrada: ${req.method} ${req.originalUrl}` });
 };
@@ -19,12 +19,12 @@ interface PgError extends Error {
 }
 
 function isZodError(err: unknown): err is ZodError {
-  // instanceof puede fallar si hay dos copias de zod; el nombre no.
+  // instanceof can fail if there are two copies of zod; the name can't.
   return err instanceof ZodError || (err instanceof Error && err.name === "ZodError" && "issues" in err);
 }
 
-// Express 5 pasa aquí tanto los errores lanzados como las promesas
-// rechazadas de las rutas, así que no hace falta envolver cada handler.
+// Express 5 passes both thrown errors and rejected route promises here, so
+// handlers don't need wrapping.
 export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   if (isZodError(err)) {
     res.status(400).json({
@@ -40,7 +40,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     return;
   }
 
-  // Errores de body-parser (JSON mal formado, cuerpo demasiado grande, ...).
+  // body-parser errors (malformed JSON, body too large, ...).
   const bodyError = err as BodyParserError;
   if (typeof bodyError.type === "string" && bodyError.type.startsWith("entity.")) {
     const status = bodyError.status ?? 400;
@@ -51,11 +51,11 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
     return;
   }
 
-  // Violaciones de restricciones de PostgreSQL. Drizzle envuelve el error del
-  // driver en DrizzleQueryError y deja el original en `cause`.
+  // PostgreSQL constraint violations. Drizzle wraps the driver error in a
+  // DrizzleQueryError and keeps the original in `cause`.
   const pgError = ((err as Error & { cause?: unknown }).cause ?? err) as PgError;
-  // Clase 22 (data exception): un decimal en una columna entera, un número
-  // fuera de rango o una fecha imposible como 2026-02-30.
+  // Class 22 (data exception): a decimal in an integer column, a number out
+  // of range, or an impossible date such as 2026-02-30.
   if (pgError.code?.startsWith("22")) {
     res.status(400).json({ error: "invalid_value", message: "Algún valor no es válido (número, entero o fecha)" });
     return;

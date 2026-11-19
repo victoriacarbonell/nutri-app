@@ -3,13 +3,13 @@ import { pgTable, serial, text, integer, timestamp, index } from "drizzle-orm/pg
 export const usersTable = pgTable("users", {
   id: serial("id").primaryKey(),
   email: text("email").notNull().unique(),
-  // Hash scrypt con sal, generado en artifacts/api-server/src/lib/auth.ts.
+  // Salted scrypt hash, generated in artifacts/api-server/src/lib/auth.ts.
   passwordHash: text("password_hash").notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
-// Sesiones de login. El id es el hash SHA-256 del token que va en la cookie,
-// así una fuga de la tabla no permite usar las sesiones.
+// Login sessions. The id is the SHA-256 hash of the token in the cookie, so a
+// leak of the table doesn't let anyone use the sessions.
 export const sessionsTable = pgTable(
   "sessions",
   {
@@ -21,7 +21,7 @@ export const sessionsTable = pgTable(
   (t) => [index("sessions_user_id_idx").on(t.userId)],
 );
 
-// Una fila por llamada a la IA, para limitar el uso diario por usuario.
+// One row per AI call, to enforce the daily usage limit per user.
 export const aiRequestsTable = pgTable(
   "ai_requests",
   {

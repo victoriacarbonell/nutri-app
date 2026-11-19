@@ -9,7 +9,7 @@ import { apiErrorMessage } from "@/lib/api-errors";
 type Mode = "login" | "register";
 
 interface LoginProps {
-  /** Mensaje a mostrar encima del formulario (p. ej. "no se pudo conectar"). */
+  /** Message shown above the form (e.g. "couldn't connect"). */
   notice?: string | null;
 }
 
@@ -34,7 +34,7 @@ export default function Login({ notice }: LoginProps) {
       } else {
         await register.mutateAsync({ data: { email, password, inviteCode: inviteCode || null } });
       }
-      // La puerta de autenticación (App.tsx) vuelve a pedir /auth/me y entra.
+      // The auth gate (App.tsx) fetches /auth/me again and lets the user in.
       await queryClient.invalidateQueries({ queryKey: getGetMeQueryKey() });
     } catch (err) {
       setError(apiErrorMessage(err, mode === "login" ? "No se pudo iniciar sesión." : "No se pudo crear la cuenta."));

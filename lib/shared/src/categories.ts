@@ -1,9 +1,9 @@
-// Única fuente de verdad de las categorías de alimentos.
-// La usan el API (para normalizar lo que se guarda) y el front (chips,
-// selectores y emojis), así que no hay que mantener listas duplicadas.
+// Single source of truth for food categories. The API uses it to normalize
+// what gets stored, and the front end for chips, selects and emojis, so
+// there are no duplicated lists to keep in sync.
 
 export interface FoodCategory {
-  /** Valor que se guarda en foods.category */
+  /** Value stored in foods.category */
   value: string;
   label: string;
   emoji: string;
@@ -32,9 +32,9 @@ export const FOOD_CATEGORIES: readonly FoodCategory[] = [
 
 const CATEGORY_VALUES = new Set(FOOD_CATEGORIES.map((c) => c.value));
 
-// Palabras clave por categoría. Se comparan sin tildes y en minúsculas, y con
-// límite de palabra al inicio para evitar falsos positivos como "aguacate" →
-// "agua" o "panceta" → "pan". El orden importa: gana la primera coincidencia.
+// Keywords per category, compared without accents and in lowercase, with a
+// word boundary at the start to avoid false positives such as "aguacate" →
+// "agua" or "panceta" → "pan". Order matters: the first match wins.
 const KEYWORDS: Array<[category: string, pattern: RegExp]> = [
   ["frutos-secos", /\b(frutos? secos?|almendra|nuez|nueces|avellana|pistacho|anacardo|cacahuete|cacahuate|nut)/],
   ["frutas", /\b(fruta|manzana|platano|banana|naranja|mandarina|fresa|pera|uva|melon|sandia|kiwi|pina|mango|cereza|melocoton|ciruela|fruit)/],
@@ -44,12 +44,12 @@ const KEYWORDS: Array<[category: string, pattern: RegExp]> = [
   ["huevos", /\b(huevo|egg)/],
   ["carnes", /\b(carne|pollo|pavo|cerdo|ternera|vacuno|cordero|jamon|embutido|chorizo|salchicha|bacon|meat|chicken|beef|pork)/],
   ["pescados", /\b(pescado|marisco|atun|salmon|merluza|bacalao|sardina|gamba|langostino|mejillon|calamar|fish|seafood|tuna)/],
-  // Estas tres llevan límite de palabra al final (con plural opcional) porque
-  // sus palabras son prefijo de otras: "pan" de "panceta", "agua" de "aguacate".
+  // These three also need a word boundary at the end (with an optional plural)
+  // because their words prefix others: "pan" in "panceta", "agua" in "aguacate".
   ["grasas", /\b(aceite|grasa|margarina|manteca|oil|fat)(e?s)?\b/],
   ["cereales", /\b(cereal|pasta|arroz|pan|bolleria|tostada|avena|trigo|harina|galleta|bread|rice|oat)(e?s)?\b/],
-  // Sin "beverage": Open Food Facts etiqueta casi todo lo vegetal como
-  // "plant-based-foods-and-beverages" y lo mandaría todo a bebidas.
+  // No "beverage": Open Food Facts tags almost everything plant-based as
+  // "plant-based-foods-and-beverages", which would send it all to drinks.
   ["bebidas", /\b(bebida|agua|zumo|jugo|refresco|cafe|te|infusion|cerveza|vino|drink|juice|water)(e?s)?\b/],
   ["snacks", /\b(snack|dulce|chocolate|golosina|postre|helado|tarta|pastel|patatas fritas|chips|candy|sweet|dessert)/],
   ["platos", /\b(plato|preparado|precocinado|pizza|hamburguesa|bocadillo|sandwich|ensalada|sopa|guiso|meal|dish|ready)/],
@@ -60,15 +60,15 @@ const KEYWORDS: Array<[category: string, pattern: RegExp]> = [
 function fold(value: string): string {
   return value
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
 }
 
 /**
- * Convierte cualquier texto de categoría (de un formulario, de Open Food
- * Facts, de datos antiguos) a uno de los valores de FOOD_CATEGORIES.
- * Si no reconoce nada devuelve "otros".
+ * Maps any category text (from a form, Open Food Facts or old data) to
+ * one of the FOOD_CATEGORIES values.
+ * Returns "otros" when nothing matches.
  */
 export function normalizeCategory(value: string | null | undefined): string {
   const folded = fold(value ?? "").replace(/[-_]/g, " ");
@@ -82,8 +82,8 @@ export function normalizeCategory(value: string | null | undefined): string {
 }
 
 /**
- * Como normalizeCategory, pero si la categoría no dice nada intenta deducirla
- * del nombre y la marca del alimento.
+ * Like normalizeCategory, but when the category says nothing it tries to
+ * infer one from the food's name and brand.
  */
 export function inferCategory(food: { name: string; brand?: string | null; category?: string | null }): string {
   const fromCategory = normalizeCategory(food.category);

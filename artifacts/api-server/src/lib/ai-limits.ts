@@ -3,8 +3,8 @@ import { db, aiRequestsTable } from "@workspace/db";
 import { and, eq, gte, sql } from "drizzle-orm";
 import { HttpError } from "./http-error";
 
-// Usos de la IA por usuario y día natural (zona horaria del servidor).
-// Cada llamada a OpenAI cuesta dinero; esto acota el gasto por usuario.
+// AI usage per user per calendar day (server time zone).
+// Every OpenAI call costs money; this caps the spend per user.
 export const AI_DAILY_LIMIT = Math.max(0, Number(process.env.AI_DAILY_LIMIT ?? 20) || 0);
 
 function startOfToday(): Date {
@@ -32,8 +32,8 @@ export const enforceAiLimit: RequestHandler = async (req, _res, next) => {
   next();
 };
 
-// Se registra la llamada aunque luego la respuesta no se pueda interpretar:
-// el coste ya se ha producido.
+// The call is recorded even if the reply can't be used afterwards:
+// the cost has already been incurred.
 export async function recordAiRequest(userId: number, kind: string): Promise<void> {
   await db.insert(aiRequestsTable).values({ userId, kind });
 }

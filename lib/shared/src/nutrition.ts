@@ -1,6 +1,6 @@
-// Único sitio donde se calculan calorías y macros. Lo usan el API al guardar
-// entradas y recetas, y el front para las previsualizaciones, así que los
-// números que ves antes de guardar son los mismos que se guardan.
+// The single place where calories and macros are computed. The API uses it
+// when saving entries and recipes, and the front end for previews, so the
+// numbers you see before saving are the ones that get saved.
 
 export interface Macros {
   calories: number;
@@ -9,7 +9,7 @@ export interface Macros {
   fat: number;
 }
 
-/** Valores nutricionales por 100 g (o 100 ml), como en la tabla foods. */
+/** Nutrition values per 100 g (or 100 ml), as in the foods table. */
 export interface MacrosPer100g {
   caloriesPer100g: number;
   proteinPer100g: number;
@@ -17,7 +17,7 @@ export interface MacrosPer100g {
   fatPer100g: number;
 }
 
-/** Valores por porción de una receta, como en la tabla recipes. */
+/** Per-serving values of a recipe, as in the recipes table. */
 export interface RecipeMacros {
   totalGrams: number;
   servings: number;
@@ -29,7 +29,7 @@ export interface RecipeMacros {
 
 export const ZERO_MACROS: Macros = { calories: 0, protein: 0, carbs: 0, fat: 0 };
 
-/** Macros de `grams` gramos de un alimento. */
+/** Macros for `grams` grams of a food. */
 export function scaleMacros(per100: MacrosPer100g, grams: number): Macros {
   const factor = grams > 0 ? grams / 100 : 0;
   return {
@@ -40,7 +40,7 @@ export function scaleMacros(per100: MacrosPer100g, grams: number): Macros {
   };
 }
 
-/** Macros de `grams` gramos de una receta, a partir de sus valores por porción. */
+/** Macros for `grams` grams of a recipe, from its per-serving values. */
 export function recipeMacrosForGrams(recipe: RecipeMacros, grams: number): Macros {
   const gramsPerServing = recipe.servings > 0 ? recipe.totalGrams / recipe.servings : 0;
   if (gramsPerServing <= 0 || grams <= 0) return { ...ZERO_MACROS };
@@ -71,7 +71,7 @@ export interface RecipeTotals {
   perServing: Macros;
 }
 
-/** Totales de una receta a partir de sus ingredientes y el número de porciones. */
+/** Recipe totals from its ingredients and number of servings. */
 export function recipeTotals(
   ingredients: readonly { food: MacrosPer100g; amountGrams: number }[],
   servings: number,
@@ -92,7 +92,7 @@ export function recipeTotals(
   };
 }
 
-/** Reparto de calorías entre macros usado para los objetivos diarios. */
+/** Split of calories between macros used for the daily goals. */
 export const MACRO_CALORIE_SPLIT = { protein: 0.3, carbs: 0.45, fat: 0.25 } as const;
 export const KCAL_PER_GRAM = { protein: 4, carbs: 4, fat: 9 } as const;
 

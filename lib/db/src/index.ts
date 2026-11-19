@@ -6,7 +6,7 @@ const { Pool } = pg;
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
-    "DATABASE_URL no está definida. Copia .env.example a .env en la raíz.",
+    "DATABASE_URL is not set. Copy .env.example to .env in the repo root.",
   );
 }
 

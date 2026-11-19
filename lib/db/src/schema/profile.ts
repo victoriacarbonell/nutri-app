@@ -5,7 +5,7 @@ import { usersTable } from "./users";
 
 export const userProfileTable = pgTable("user_profile", {
   id: serial("id").primaryKey(),
-  // Un perfil por usuario.
+  // One profile per user.
   userId: integer("user_id").notNull().unique().references(() => usersTable.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
   age: integer("age").notNull(),

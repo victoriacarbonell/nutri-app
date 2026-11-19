@@ -2,8 +2,8 @@ import type { RequestHandler } from "express";
 import { SESSION_COOKIE, findSessionUserId, sessionCookieOptions } from "../lib/auth";
 import { HttpError } from "../lib/http-error";
 
-// Pone en req.userId el dueño de los datos de la petición a partir de la
-// cookie de sesión. Sin sesión válida responde 401.
+// Sets req.userId, the owner of the request's data, from the session cookie.
+// Responds 401 when there's no valid session.
 export const requireUser: RequestHandler = async (req, res, next) => {
   const token = (req.cookies as Record<string, string | undefined> | undefined)?.[SESSION_COOKIE];
   if (!token) throw new HttpError(401, "unauthorized", "Inicia sesión para continuar");

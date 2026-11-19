@@ -1,6 +1,6 @@
-// Fechas de calendario en formato YYYY-MM-DD, sin pasar por la zona horaria
-// UTC: toISOString() devolvía el día anterior entre medianoche y la 1 o las 2
-// en España, y el resumen de "hoy" no coincidía con el diario del front.
+// Calendar dates as YYYY-MM-DD, without going through UTC: toISOString()
+// returned the previous day between midnight and 1 or 2 a.m. in Spain, so the
+// "today" summary didn't match the front end's diary.
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -15,13 +15,13 @@ export function isIsoDate(value: string): boolean {
   return date.getUTCFullYear() === y && date.getUTCMonth() === m - 1 && date.getUTCDate() === d;
 }
 
-/** Fecha de hoy según la zona horaria del servidor. */
+/** Today's date in the server's time zone. */
 export function todayLocal(): string {
   const now = new Date();
   return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
 }
 
-/** Suma días a una fecha YYYY-MM-DD. Usa aritmética UTC para que no influya la zona horaria. */
+/** Adds days to a YYYY-MM-DD date. Uses UTC arithmetic so the time zone has no effect. */
 export function addDays(date: string, days: number): string {
   const [y, m, d] = date.split("-").map(Number);
   const result = new Date(Date.UTC(y, m - 1, d + days));
@@ -29,8 +29,8 @@ export function addDays(date: string, days: number): string {
 }
 
 /**
- * El cliente manda su fecha local en `date` para que "hoy" sea el suyo y no
- * el del servidor. Si no la manda, se usa la del servidor.
+ * The client sends its local date in `date`, so "today" is the user's and not
+ * the server's. Without it, the server's date is used.
  */
 export function resolveDate(input: string | undefined | null): string {
   return input && isIsoDate(input) ? input : todayLocal();

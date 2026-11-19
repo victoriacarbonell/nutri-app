@@ -29,7 +29,7 @@ async function startSession(res: Response, userId: number) {
 router.post("/register", async (req, res) => {
   const body = RegisterBody.parse(req.body);
 
-  // Con SIGNUP_CODE definido, solo puede registrarse quien lo conozca.
+  // With SIGNUP_CODE set, only people who know it can sign up.
   const signupCode = process.env.SIGNUP_CODE;
   if (signupCode && body.inviteCode !== signupCode) {
     throw new HttpError(403, "invalid_invite_code", "Código de invitación incorrecto");
@@ -52,8 +52,8 @@ router.post("/login", async (req, res) => {
   const email = body.email.trim().toLowerCase();
   const [user] = await db.select().from(usersTable).where(eq(usersTable.email, email));
 
-  // Mismo mensaje si el email no existe o la contraseña falla, para no
-  // revelar qué emails tienen cuenta.
+  // Same message whether the email doesn't exist or the password is wrong, so
+  // it doesn't reveal which emails have an account.
   if (!user || !(await verifyPassword(body.password, user.passwordHash))) {
     throw new HttpError(401, "invalid_credentials", "Email o contraseña incorrectos");
   }

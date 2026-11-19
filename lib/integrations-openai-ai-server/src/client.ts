@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
-// La IA es opcional: sin clave, el servidor arranca igual y las rutas de IA
-// responden 503. Se aceptan también las variables antiguas de Replit.
+// AI is optional: without a key the server still starts and the AI routes
+// respond 503. The old Replit variables are also accepted.
 const apiKey =
   process.env.OPENAI_API_KEY ?? process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
 const baseURL =

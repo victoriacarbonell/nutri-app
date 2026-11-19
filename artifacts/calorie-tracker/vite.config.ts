@@ -4,7 +4,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 
-// Valores por defecto para desarrollo local; se pueden sobrescribir por entorno.
+// Defaults for local development; they can be overridden through the environment.
 const port = Number(process.env.WEB_PORT ?? process.env.PORT ?? 5173);
 
 if (Number.isNaN(port) || port <= 0) {
@@ -13,7 +13,7 @@ if (Number.isNaN(port) || port <= 0) {
 
 const basePath = process.env.BASE_PATH ?? "/";
 
-// El front llama a /api con ruta relativa; en local lo redirigimos al API.
+// The front end calls /api with a relative path; locally we proxy it to the API.
 const apiTarget = process.env.API_URL ?? "http://localhost:8080";
 
 export default defineConfig({
@@ -21,12 +21,12 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
-    // PWA: manifest generado + service worker (Workbox) que precachea la app
-    // y guarda las últimas respuestas del API para poder abrirla sin red.
+    // PWA: generated manifest plus a service worker (Workbox) that precaches the
+    // app and keeps the latest API responses so it can open without a network.
     VitePWA({
       registerType: "autoUpdate",
-      // En desarrollo no se registra el service worker: la caché molesta al
-      // iterar. Se prueba con `pnpm build` y `pnpm serve`.
+      // The service worker isn't registered in development: the cache gets in the
+      // way while iterating. Test it with `pnpm build` and `pnpm serve`.
       devOptions: { enabled: false },
       includeAssets: ["app-icon.svg", "app-icon-dark.svg", "icons/apple-touch-icon.png", "opengraph.jpg"],
       manifest: {
@@ -47,14 +47,14 @@ export default defineConfig({
         ],
       },
       workbox: {
-        // La app es una SPA: cualquier ruta que no exista en caché sirve index.html,
-        // excepto el API.
+        // The app is a SPA: any route not in the cache serves index.html,
+        // except the API.
         navigateFallback: "index.html",
         navigateFallbackDenylist: [/^\/api\//],
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff2}"],
         runtimeCaching: [
           {
-            // Lecturas del API: red primero y, sin conexión, la última respuesta.
+            // API reads: network first and, when offline, the latest response.
             urlPattern: ({ url, request }) => url.pathname.startsWith("/api/") && request.method === "GET",
             handler: "NetworkFirst",
             options: {

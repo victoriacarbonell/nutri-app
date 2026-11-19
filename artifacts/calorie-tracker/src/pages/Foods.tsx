@@ -133,7 +133,7 @@ export default function Foods() {
 
   const sortedCategories = groupedFoods
     ? Object.keys(groupedFoods).sort((a, b) => {
-        // indexOf devuelve -1 (no undefined) si no la conoce: esas van al final.
+        // indexOf returns -1 (not undefined) for unknown categories: those go last.
         const order = FOOD_CATEGORIES.map(c => c.value);
         const rank = (c: string) => (order.indexOf(c) === -1 ? order.length : order.indexOf(c));
         return rank(a) - rank(b);

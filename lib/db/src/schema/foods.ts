@@ -26,7 +26,7 @@ export const foodsTable = pgTable(
   },
   (t) => [
     index("foods_user_id_idx").on(t.userId),
-    // Un mismo código de barras no puede repetirse dentro de un usuario.
+    // The same barcode can't appear twice for one user.
     uniqueIndex("foods_user_barcode_idx").on(t.userId, t.barcode).where(sql`${t.barcode} is not null`),
   ],
 );

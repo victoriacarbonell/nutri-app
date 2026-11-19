@@ -22,16 +22,16 @@ import AppLayout from "./components/layout/AppLayout";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // No tiene sentido reintentar errores del cliente (401, 404, 429...).
+      // There's no point retrying client errors (401, 404, 429...).
       retry: (count, error) =>
         count < 2 && !(error instanceof ApiError && error.status >= 400 && error.status < 500),
     },
   },
   queryCache: new QueryCache({
-    // Si cualquier consulta responde 401 (sesión caducada), se vuelve a
-    // comprobar /auth/me y la puerta de abajo enseña el login. La propia
-    // consulta /auth/me queda fuera: sin sesión siempre da 401 y se
-    // invalidaría a sí misma en bucle.
+    // If any query responds 401 (expired session), /auth/me is checked again
+    // and the gate below shows the login. The /auth/me query itself is
+    // excluded: without a session it always returns 401 and would
+    // invalidate itself in a loop.
     onError: (error, query) => {
       const isMeQuery = query.queryKey[0] === getGetMeQueryKey()[0];
       if (!isMeQuery && isApiStatus(error, 401)) {

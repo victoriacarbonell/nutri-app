@@ -10,7 +10,7 @@ import { formatKcal, formatGrams } from "@/lib/format";
 export default function Recipes() {
   const [search, setSearch] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  // Espera a que se deje de escribir antes de buscar (antes, una petición por tecla).
+  // Wait until the user stops typing before searching (it used to send one request per keystroke).
   const [debouncedSearch, setDebouncedSearch] = useState("");
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search.trim()), 300);

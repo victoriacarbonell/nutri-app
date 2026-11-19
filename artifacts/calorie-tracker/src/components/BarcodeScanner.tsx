@@ -52,8 +52,8 @@ async function lookupBarcode(barcode: string): Promise<OffProductInfo> {
       n100["fiber_100g"] != null
         ? Math.round((Number(n100["fiber_100g"]) || 0) * 10) / 10
         : null,
-    // Todas las etiquetas de categoría, de la más general a la más concreta;
-    // inferCategory las convierte a una categoría propia por palabras clave.
+    // Every category tag, from the most general to the most specific;
+    // inferCategory maps them to one of our categories by keyword.
     category: ((p.categories_tags as string[] | undefined) ?? [])
       .map((tag) => tag.replace(/^[a-z]{2}:/, ""))
       .join(" "),

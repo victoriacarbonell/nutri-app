@@ -18,8 +18,8 @@ const MEAL_TYPES = ["desayuno", "almuerzo", "comida", "merienda", "cena", "snack
 
 type LogEntryRow = typeof logEntriesTable.$inferSelect;
 
-// Adjunta el alimento o la receta a cada entrada con dos consultas en total,
-// en vez de dos por entrada.
+// Attaches the food or recipe to each entry with two queries in total,
+// instead of two per entry.
 async function enrichEntries(entries: LogEntryRow[]) {
   const foodIds = [...new Set(entries.flatMap((e) => (e.foodId ? [e.foodId] : [])))];
   const recipeIds = [...new Set(entries.flatMap((e) => (e.recipeId ? [e.recipeId] : [])))];
@@ -71,7 +71,7 @@ async function buildDayLog(userId: number, date: string) {
   };
 }
 
-// Macros de una entrada a partir de su alimento o receta y los gramos.
+// Macros of an entry from its food or recipe and the grams.
 async function macrosForEntry(
   userId: number,
   ref: { foodId?: number | null; recipeId?: number | null },

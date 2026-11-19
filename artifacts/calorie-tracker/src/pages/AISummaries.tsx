@@ -28,7 +28,7 @@ function ScoreBadge({ score }: { score?: number | null }) {
 }
 
 function SummaryCard({ period }: { period: Period }) {
-  // Fecha local del cliente: el periodo termina en el "hoy" del usuario.
+  // The client's local date: the period ends on the user's "today".
   const params = { date: format(new Date(), "yyyy-MM-dd") };
   const weekly = useGetAiWeeklySummary(params, {
     query: { queryKey: getGetAiWeeklySummaryQueryKey(params), enabled: period === "weekly", staleTime: 5 * 60 * 1000 },

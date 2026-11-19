@@ -1,6 +1,6 @@
 import { ApiError } from "@workspace/api-client-react";
 
-/** Mensaje de error del API (`{ message }`) o, si no lo hay, el texto por defecto. */
+/** The API's error message (`{ message }`), or the fallback text if there isn't one. */
 export function apiErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof ApiError) {
     const message = (error.data as { message?: unknown } | null)?.message;

@@ -27,23 +27,23 @@ app.use(
     },
   }),
 );
-// Con el proxy de Vite el front y el API comparten origen y no hace falta
-// CORS. Si el front se sirve desde otro dominio, se indica en CORS_ORIGIN
-// (varios separados por comas) y se permiten las cookies de sesión.
+// With the Vite proxy the front end and the API share an origin, so CORS is
+// not needed. If the front end is served from another domain, set CORS_ORIGIN
+// (comma-separated) and session cookies are allowed.
 const corsOrigin = process.env.CORS_ORIGIN?.split(",").map((o) => o.trim()).filter(Boolean);
 if (corsOrigin?.length) {
   app.use(cors({ origin: corsOrigin, credentials: true }));
 }
 app.use(cookieParser());
-// 10 MB bastan para una foto ya reducida en el navegador; 50 MB invitaba a abusar
-// de la ruta de IA.
+// 10 MB is enough for a photo already downscaled in the browser; 50 MB invited
+// abuse of the AI route.
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 app.use("/api", router);
 app.use("/api", notFoundHandler);
 
-// Siempre el último: convierte cualquier error en una respuesta JSON.
+// Must be last: turns any error into a JSON response.
 app.use(errorHandler);
 
 export default app;

@@ -48,7 +48,7 @@ export default function Progress() {
 
   const chartData = sortedLogs.map(log => ({
     date: format(parseISO(log.date), 'dd/MM'),
-    peso: log.weightKg,
+    weightKg: log.weightKg,
   }));
 
   const latestWeight = sortedLogs.length > 0 ? sortedLogs[sortedLogs.length - 1].weightKg : null;
@@ -96,7 +96,7 @@ export default function Progress() {
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.08)', fontSize: 13 }}
                   formatter={(v: number) => [`${v} kg`, "Peso"]}
                 />
-                <Line type="monotone" dataKey="peso" stroke="hsl(var(--primary))" strokeWidth={2.5}
+                <Line type="monotone" dataKey="weightKg" stroke="hsl(var(--primary))" strokeWidth={2.5}
                   dot={{ r: 3, fill: "hsl(var(--primary))", strokeWidth: 2, stroke: "hsl(var(--background))" }}
                   activeDot={{ r: 5 }}
                 />

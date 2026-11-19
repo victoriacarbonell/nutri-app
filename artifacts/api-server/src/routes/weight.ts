@@ -20,8 +20,8 @@ router.post("/", async (req, res) => {
   const body = CreateWeightLogBody.parse(req.body);
   const [log] = await db.insert(weightLogsTable).values({ ...body, userId: req.userId }).returning();
 
-  // Si es el registro más reciente, actualiza el peso del perfil para que el
-  // objetivo de Harris-Benedict se recalcule con él.
+  // If this is the latest log, update the profile weight so the
+  // Harris-Benedict goal is recalculated with it.
   const [newer] = await db.select({ id: weightLogsTable.id }).from(weightLogsTable)
     .where(and(eq(weightLogsTable.userId, req.userId), gt(weightLogsTable.date, log.date)))
     .limit(1);

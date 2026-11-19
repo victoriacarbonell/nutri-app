@@ -1,23 +1,23 @@
 import { defineConfig } from "drizzle-kit";
 import path from "path";
 
-// drizzle-kit no carga el .env por sí solo: leemos el de la raíz si existe.
+// drizzle-kit doesn't load .env by itself: read the root one if it exists.
 try {
   process.loadEnvFile(path.join(__dirname, "../../.env"));
 } catch {
-  // Sin .env: se usan las variables del entorno (p. ej. en el hosting).
+  // No .env: use the environment variables (e.g. on the host).
 }
 
 if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL no está definida. Copia .env.example a .env en la raíz.");
+  throw new Error("DATABASE_URL is not set. Copy .env.example to .env in the repo root.");
 }
 
 export default defineConfig({
-  // Rutas relativas al paquete: drizzle-kit las trata como glob y en Windows
-  // las barras invertidas de path.join rompen la búsqueda.
+  // Paths relative to the package: drizzle-kit treats them as globs, and on
+  // Windows the backslashes from path.join break the lookup.
   schema: "./src/schema/index.ts",
-  // Las migraciones SQL se versionan en git: `pnpm db:generate` las crea a
-  // partir del esquema y `pnpm db:migrate` las aplica.
+  // SQL migrations are versioned in git: `pnpm db:generate` creates them from
+  // the schema and `pnpm db:migrate` applies them.
   out: "./migrations",
   dialect: "postgresql",
   dbCredentials: {

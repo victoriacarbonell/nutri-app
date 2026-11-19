@@ -8,7 +8,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const [moreOpen, setMoreOpen] = useState(false);
   const closeMore = () => setMoreOpen(false);
-  // Páginas a las que se llega desde "Más": con ellas abiertas, "Más" se marca activo.
+  // Pages reached from "Más": while one is open, "Más" shows as active.
   const morePaths = ["/recetas", "/progreso", "/estadisticas", "/ia", "/perfil"];
   const isMoreActive = morePaths.includes(location);
 

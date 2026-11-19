@@ -34,7 +34,7 @@ export default function LogEntryModal({ food, open, onOpenChange }: LogEntryModa
   if (!food) return null;
 
   const numAmount = parseFloat(amount) || 0;
-  // Mismo cálculo que hace el API al guardar.
+  // Same calculation the API does when saving.
   const macros = scaleMacros(food, numAmount);
   
   const calcCalories = Math.round(macros.calories);

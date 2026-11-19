@@ -18,8 +18,8 @@ import { notFound } from "../lib/http-error";
 
 const router = Router();
 
-// Las categorías viven en @workspace/shared. Al leer se normalizan por si hay
-// filas antiguas guardadas con otros nombres.
+// Categories live in @workspace/shared. They're normalized on read in case
+// older rows were saved with other names.
 function withCategory<T extends { category: string }>(food: T): T {
   return { ...food, category: normalizeCategory(food.category) };
 }
@@ -63,10 +63,10 @@ router.post("/", async (req, res) => {
   res.status(201).json(withCategory(food));
 });
 
-// Antes que las rutas /:id: si no, DELETE /portions/5 llegaría a /:id con id "portions".
+// Before the /:id routes: otherwise DELETE /portions/5 would reach /:id with id "portions".
 router.delete("/portions/:id", async (req, res) => {
   const { id } = DeletePortionParams.parse({ id: req.params.id });
-  // Solo se puede borrar una porción de un alimento propio.
+  // A portion can only be deleted from one of the user's own foods.
   const [portion] = await db.select({ id: portionsTable.id })
     .from(portionsTable)
     .innerJoin(foodsTable, eq(foodsTable.id, portionsTable.foodId))

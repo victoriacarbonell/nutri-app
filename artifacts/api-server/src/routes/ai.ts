@@ -17,7 +17,7 @@ import { getCalorieGoal } from "./profile";
 
 const router = Router();
 
-// Sin clave de OpenAI configurada, todas las rutas de IA responden 503.
+// Without an OpenAI key configured, every AI route responds 503.
 router.use((_req, res, next) => {
   if (!openaiClient) {
     res.status(503).json({
@@ -33,14 +33,14 @@ router.get("/usage", async (req, res) => {
   res.json(await aiUsage(req.userId));
 });
 
-// Límite diario de llamadas por usuario (AI_DAILY_LIMIT).
+// Daily call limit per user (AI_DAILY_LIMIT).
 router.use(enforceAiLimit);
 
-// El middleware anterior garantiza que el cliente existe al llegar a las rutas.
+// The middleware above guarantees the client exists by the time a route runs.
 const openai = openaiClient!;
 
-// Tipo real de la imagen a partir de sus primeros bytes en base64. Antes se
-// declaraba siempre JPEG aunque fuera PNG o WebP.
+// Real image type from its first base64 bytes. It used to always be declared
+// as JPEG, even for PNG or WebP.
 function imageMimeType(base64: string): string {
   if (base64.startsWith("iVBOR")) return "image/png";
   if (base64.startsWith("UklGR")) return "image/webp";
@@ -48,8 +48,8 @@ function imageMimeType(base64: string): string {
   return "image/jpeg";
 }
 
-// Interpreta la respuesta del modelo y la valida. Si no sirve, es un fallo del
-// servicio de IA (502), no un éxito vacío.
+// Parses the model's reply and validates it. An unusable reply is an AI
+// service failure (502), not an empty success.
 function parseAiJson<T>(content: string, schema: z.ZodType<T>, log: { error: (obj: object, msg: string) => void }): T {
   let data: unknown;
   try {
@@ -131,7 +131,7 @@ Be realistic with portion sizes. If the image is unclear, use "low" confidence.`
   return res.json(parseAiJson(content, AnalyzeImageResponse, req.log));
 });
 
-// Datos de los últimos `daysBack` días hasta `endDate` incluido (7 o 30, como el panel).
+// Data for the last `daysBack` days up to and including `endDate` (7 or 30, like the dashboard).
 async function getRecentData(userId: number, daysBack: number, endDate: string) {
   const startDate = addDays(endDate, -daysBack + 1);
 
@@ -174,29 +174,32 @@ router.get("/weekly-summary", async (req, res) => {
     });
   }
 
-  const prompt = `Eres un nutricionista experto. Analiza estos datos de la última semana (${startDate} al ${endDate}) de un usuario y proporciona un resumen motivador y útil en español.
+  const goalText = profile?.goal === "lose" ? "lose weight" : profile?.goal === "gain" ? "build muscle" : "maintain weight";
+  const avg = (key: "protein" | "carbs" | "fat") =>
+    Math.round(entries.reduce((s, e) => s + Number(e[key]), 0) / Math.max(entries.length, 1));
+  const prompt = `You are an expert nutritionist. Analyze this user's data for the last week (${startDate} to ${endDate}) and write a motivating, useful summary.
 
-Datos del usuario:
-- Nombre: ${profile?.name ?? "Usuario"}
-- Objetivo: ${profile?.goal === "lose" ? "perder peso" : profile?.goal === "gain" ? "ganar músculo" : "mantener peso"}
-- Meta calórica diaria: ${goal} kcal
-- Nivel de actividad: ${profile?.activityLevel ?? "moderado"}
+User:
+- Name: ${profile?.name ?? "Usuario"}
+- Goal: ${goalText}
+- Daily calorie goal: ${goal} kcal
+- Activity level: ${profile?.activityLevel ?? "moderate"}
 
-Datos de la semana:
-- Días registrados: ${entries.length}/7
-- Calorías promedio diarias: ${Math.round(avgCalories)} kcal
-- Proteínas promedio: ${Math.round(entries.reduce((s, e) => s + Number(e.protein), 0) / Math.max(entries.length, 1))}g/día
-- Carbohidratos promedio: ${Math.round(entries.reduce((s, e) => s + Number(e.carbs), 0) / Math.max(entries.length, 1))}g/día
-- Grasas promedio: ${Math.round(entries.reduce((s, e) => s + Number(e.fat), 0) / Math.max(entries.length, 1))}g/día
-- Calorías quemadas con ejercicio: ${Math.round(totalExercise)} kcal total
-- Número de sesiones de ejercicio: ${exercises.length}
-${weights.length >= 2 ? `- Cambio de peso: ${(weights[weights.length - 1].weightKg - weights[0].weightKg).toFixed(1)} kg` : ""}
+Week:
+- Days logged: ${entries.length}/7
+- Average daily calories: ${Math.round(avgCalories)} kcal
+- Average protein: ${avg("protein")} g/day
+- Average carbs: ${avg("carbs")} g/day
+- Average fat: ${avg("fat")} g/day
+- Calories burned through exercise: ${Math.round(totalExercise)} kcal in total
+- Exercise sessions: ${exercises.length}
+${weights.length >= 2 ? `- Weight change: ${(weights[weights.length - 1].weightKg - weights[0].weightKg).toFixed(1)} kg` : ""}
 
-Responde en formato JSON:
+Write every text value in Spanish. Respond with a JSON object in this format:
 {
-  "summary": "Resumen general de 2-3 frases",
+  "summary": "Overall summary in 2-3 sentences",
   "insights": ["insight 1", "insight 2", "insight 3"],
-  "recommendations": ["recomendación 1", "recomendación 2", "recomendación 3"]
+  "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"]
 }`;
 
   const response = await openai.chat.completions.create({
@@ -235,22 +238,23 @@ router.get("/monthly-summary", async (req, res) => {
     });
   }
 
-  const prompt = `Eres un nutricionista experto. Analiza estos datos del último mes (${startDate} al ${endDate}) y proporciona un análisis detallado en español.
+  const goalText = profile?.goal === "lose" ? "lose weight" : profile?.goal === "gain" ? "build muscle" : "maintain weight";
+  const prompt = `You are an expert nutritionist. Analyze this user's data for the last month (${startDate} to ${endDate}) and write a detailed analysis.
 
-Usuario: ${profile?.name ?? "Usuario"}, objetivo: ${profile?.goal === "lose" ? "perder peso" : profile?.goal === "gain" ? "ganar músculo" : "mantener peso"}, meta: ${goal} kcal/día
+User: ${profile?.name ?? "Usuario"}, goal: ${goalText}, target: ${goal} kcal/day
 
-Datos del mes:
-- Días registrados: ${entries.length}/30
-- Calorías promedio: ${Math.round(avgCalories)} kcal/día
-- Calorías totales ejercicio: ${Math.round(totalExercise)} kcal
-- Sesiones de ejercicio: ${exercises.length}
-${weights.length >= 2 ? `- Cambio de peso: ${(weights[weights.length - 1].weightKg - weights[0].weightKg).toFixed(1)} kg` : "- Sin datos de peso"}
+Month:
+- Days logged: ${entries.length}/30
+- Average calories: ${Math.round(avgCalories)} kcal/day
+- Total exercise calories: ${Math.round(totalExercise)} kcal
+- Exercise sessions: ${exercises.length}
+${weights.length >= 2 ? `- Weight change: ${(weights[weights.length - 1].weightKg - weights[0].weightKg).toFixed(1)} kg` : "- No weight data"}
 
-Responde en JSON:
+Write every text value in Spanish. Respond with a JSON object in this format:
 {
-  "summary": "Análisis completo del mes en 3-4 frases",
+  "summary": "Full analysis of the month in 3-4 sentences",
   "insights": ["insight 1", "insight 2", "insight 3", "insight 4"],
-  "recommendations": ["recomendación 1", "recomendación 2", "recomendación 3"]
+  "recommendations": ["recommendation 1", "recommendation 2", "recommendation 3"]
 }`;
 
   const response = await openai.chat.completions.create({

@@ -12,8 +12,8 @@ CREATE TABLE "sessions" (
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL
 );
 --> statement-breakpoint
--- El usuario provisional del punto 3 no tiene email ni contraseña y no puede
--- cumplir las columnas NOT NULL. Sus datos (si los hubiera) se borran en cascada.
+-- The provisional user from the earlier refactor has no email or password and
+-- can't satisfy the NOT NULL columns. Its data (if any) is cascade-deleted.
 DELETE FROM "users";--> statement-breakpoint
 ALTER TABLE "users" ADD COLUMN "email" text NOT NULL;--> statement-breakpoint
 ALTER TABLE "users" ADD COLUMN "password_hash" text NOT NULL;--> statement-breakpoint

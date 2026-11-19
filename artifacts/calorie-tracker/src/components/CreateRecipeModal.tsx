@@ -71,7 +71,7 @@ export default function CreateRecipeModal({ open, onOpenChange }: CreateRecipeMo
 
   const servings = Math.max(1, Number(form.watch("servings")) || 1);
 
-  // Mismo cálculo que hace el API al guardar.
+  // Same calculation the API does when saving.
   const totals = recipeTotals(
     ingredients.map((ing) => ({ food: ing.food, amountGrams: parseFloat(ing.amountGrams) || 0 })),
     servings,

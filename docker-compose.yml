@@ -1,4 +1,4 @@
-# Base de datos para desarrollo local: `pnpm db:up`
+# Database for local development: `pnpm db:up`
 services:
   db:
     image: postgres:16
@@ -7,8 +7,8 @@ services:
       POSTGRES_PASSWORD: nutriapp
       POSTGRES_DB: nutriapp
     ports:
-      # 5433 en el host para no chocar con un PostgreSQL instalado en local,
-      # que suele ocupar el 5432.
+      # Port 5433 on the host to avoid clashing with a locally installed
+      # PostgreSQL, which usually takes 5432.
       - "5433:5432"
     volumes:
       - nutriapp-db:/var/lib/postgresql/data

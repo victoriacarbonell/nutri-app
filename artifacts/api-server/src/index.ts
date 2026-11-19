@@ -1,7 +1,7 @@
 import app from "./app";
 import { logger } from "./lib/logger";
 
-// 8080 por defecto para desarrollo local; en producción lo fija el hosting.
+// 8080 by default for local development; in production the host sets it.
 const rawPort = process.env["PORT"] ?? "8080";
 
 const port = Number(rawPort);

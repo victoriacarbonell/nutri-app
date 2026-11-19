@@ -283,10 +283,10 @@ function AccountSection() {
   const handleLogout = () => {
     logout.mutate(undefined, {
       onSettled: () => {
-        // Primero se marca que no hay usuario, para que la puerta de
-        // autenticación (App.tsx) muestre el login al instante; después se
-        // borran los datos del usuario anterior. clear() a secas no avisa de
-        // forma fiable a los componentes montados.
+        // First mark that there's no user, so the auth gate (App.tsx)
+        // shows the login immediately; then remove the previous user's
+        // data. A bare clear() doesn't reliably notify mounted
+        // components.
         const meKey = getGetMeQueryKey();
         queryClient.setQueryData(meKey, null);
         queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== meKey[0] });

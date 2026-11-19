@@ -5,7 +5,7 @@ import { es } from "date-fns/locale";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function Stats() {
-  // Fecha local del cliente: así "hoy" es el del usuario y no el del servidor.
+  // The client's local date, so "today" is the user's and not the server's.
   const today = format(new Date(), "yyyy-MM-dd");
   const { data: stats, isLoading } = useGetWeeklyStats(
     { date: today },
@@ -25,11 +25,11 @@ export default function Stats() {
   // Format data for charts
   const barData = stats?.dailyData.map(day => ({
     name: format(parseISO(day.date), 'EE', { locale: es }).substring(0, 2),
-    calorias: day.totalCalories,
-    objetivo: day.calorieGoal,
+    calories: day.totalCalories,
+    goal: day.calorieGoal,
   })) || [];
 
-  // El anillo reparte las calorías (4 / 4 / 9 kcal por gramo); la leyenda muestra los gramos.
+  // The ring splits calories (4 / 4 / 9 kcal per gram); the legend shows grams.
   const pieData = [
     { name: 'Proteínas', grams: stats?.avgProtein || 0, value: (stats?.avgProtein || 0) * 4, color: 'hsl(var(--chart-1))' },
     { name: 'Carbohidratos', grams: stats?.avgCarbs || 0, value: (stats?.avgCarbs || 0) * 4, color: 'hsl(var(--chart-3))' },
@@ -64,7 +64,7 @@ export default function Stats() {
                 cursor={{ fill: 'hsl(var(--secondary))', opacity: 0.4 }}
                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
               />
-              <Bar dataKey="calorias" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="calories" name="Calorías" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               {calorieGoal ? (
                 <ReferenceLine y={calorieGoal} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" label={{ value: "Objetivo", position: "insideTopRight", fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
               ) : null}

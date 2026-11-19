@@ -360,7 +360,7 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  // Envía la cookie de sesión también si el API está en otro origen.
+  // Send the session cookie even when the API is on another origin.
   const response = await fetch(input, { credentials: "include", ...init, method, headers });
 
   if (!response.ok) {

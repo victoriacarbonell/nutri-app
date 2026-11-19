@@ -1,5 +1,5 @@
-// Error con código HTTP. El gestor de errores (middlewares/error-handler.ts)
-// lo convierte en una respuesta JSON con ese estado.
+// Error with an HTTP status. The error handler (middlewares/error-handler.ts)
+// turns it into a JSON response with that status.
 export class HttpError extends Error {
   readonly status: number;
   readonly code: string;

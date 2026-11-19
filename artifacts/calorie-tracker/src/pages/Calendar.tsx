@@ -190,7 +190,7 @@ export default function Calendar() {
   // Monthly stats
   const logsThisMonth = calendarDays?.filter(d => d.hasLog) ?? [];
   const onTrack = logsThisMonth.filter(d => d.status === "on_track").length;
-  // Racha más larga de días consecutivos en objetivo (el API devuelve todos los días del mes en orden).
+  // Longest run of consecutive on-track days (the API returns every day of the month in order).
   const bestStreak = (calendarDays ?? []).reduce(
     (acc, d) => {
       const run = d.status === "on_track" ? acc.run + 1 : 0;

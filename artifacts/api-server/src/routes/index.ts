@@ -16,7 +16,7 @@ const router: IRouter = Router();
 router.use(healthRouter);
 router.use("/auth", authRouter);
 
-// Todo lo que sigue exige sesión iniciada.
+// Everything below requires a logged-in session.
 router.use(requireUser);
 router.use("/profile", profileRouter);
 router.use("/foods", foodsRouter);

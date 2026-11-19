@@ -57,7 +57,7 @@ catalog:
 
 autoInstallPeers: false
 
-# Dependencias con permiso para ejecutar scripts de instalación (pnpm 11+).
+# Dependencies allowed to run install scripts (pnpm 11+).
 allowBuilds:
   '@swc/core': true
   esbuild: true

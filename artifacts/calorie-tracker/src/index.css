@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Colores de gráficos y macros (text-chart-1, bg-chart-1, ...). */
+  /* Chart and macro colors (text-chart-1, bg-chart-1, ...). */
   --color-chart-1: hsl(var(--chart-1));
   --color-chart-2: hsl(var(--chart-2));
   --color-chart-3: hsl(var(--chart-3));

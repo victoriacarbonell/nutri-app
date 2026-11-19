@@ -1,8 +1,8 @@
-// Campos que los middlewares añaden a la petición.
+// Fields that middlewares add to the request.
 declare global {
   namespace Express {
     interface Request {
-      /** Dueño de los datos de la petición; lo pone middlewares/current-user.ts */
+      /** Owner of the request's data; set by middlewares/current-user.ts */
       userId: number;
     }
   }

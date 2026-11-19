@@ -6,8 +6,8 @@ import { eq, and, gt, lt } from "drizzle-orm";
 
 const scrypt = promisify(scryptCallback) as (password: string, salt: string, keylen: number) => Promise<Buffer>;
 
-// scrypt viene con Node, así que no hace falta bcrypt ni argon2, que son
-// módulos nativos y complican el empaquetado con esbuild.
+// scrypt ships with Node, so there's no need for bcrypt or argon2, which are
+// native modules and complicate bundling with esbuild.
 const SCRYPT_KEYLEN = 64;
 
 export async function hashPassword(password: string): Promise<string> {
@@ -35,7 +35,7 @@ export async function createSession(userId: number): Promise<{ token: string; ex
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000);
   await db.insert(sessionsTable).values({ id: hashToken(token), userId, expiresAt });
-  // Limpieza barata de sesiones caducadas, aprovechando que alguien entra.
+  // Cheap cleanup of expired sessions, done whenever someone logs in.
   await db.delete(sessionsTable).where(lt(sessionsTable.expiresAt, new Date()));
   return { token, expiresAt };
 }
@@ -55,7 +55,7 @@ export function sessionCookieOptions(expiresAt?: Date): CookieOptions {
   return {
     httpOnly: true,
     sameSite: "lax",
-    // En producción la cookie solo viaja por HTTPS.
+    // In production the cookie is only sent over HTTPS.
     secure: process.env.NODE_ENV === "production",
     path: "/",
     ...(expiresAt ? { expires: expiresAt } : {}),
