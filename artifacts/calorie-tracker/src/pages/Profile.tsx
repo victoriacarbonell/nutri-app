@@ -282,9 +282,15 @@ function AccountSection() {
 
   const handleLogout = () => {
     logout.mutate(undefined, {
-      // Vacía la caché: la puerta de autenticación volverá a pedir /auth/me
-      // y mostrará el login.
-      onSettled: () => queryClient.clear(),
+      onSettled: () => {
+        // Primero se marca que no hay usuario, para que la puerta de
+        // autenticación (App.tsx) muestre el login al instante; después se
+        // borran los datos del usuario anterior. clear() a secas no avisa de
+        // forma fiable a los componentes montados.
+        const meKey = getGetMeQueryKey();
+        queryClient.setQueryData(meKey, null);
+        queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== meKey[0] });
+      },
     });
   };
 
