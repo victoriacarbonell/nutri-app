@@ -184,6 +184,7 @@ export interface CreateRecipeBody {
   description?: string | null;
   photoUrl?: string | null;
   servings: number;
+  /** @minItems 1 */
   ingredients: CreateRecipeIngredientBody[];
 }
 
@@ -406,6 +407,30 @@ export interface AiSummary {
   generatedAt: string;
 }
 
+export interface AuthUser {
+  id: number;
+  email: string;
+  createdAt: string;
+}
+
+export interface RegisterBody {
+  email: string;
+  /** @minLength 8 */
+  password: string;
+  inviteCode?: string | null;
+}
+
+export interface LoginBody {
+  email: string;
+  password: string;
+}
+
+export interface AiUsage {
+  used: number;
+  limit: number;
+  remaining: number;
+}
+
 export type GetFoodsParams = {
   q?: string;
   category?: string;
@@ -424,4 +449,44 @@ export type GetExercisesParams = {
 
 export type GetWeightLogsParams = {
   limit?: number;
+};
+
+export type GetTodaySummaryParams = {
+  /**
+   * Client's local date (YYYY-MM-DD). Defaults to the server's date.
+   * @pattern ^\d{4}-\d{2}-\d{2}$
+   */
+  date?: string;
+};
+
+export type GetWeeklyStatsParams = {
+  /**
+   * Client's local date (YYYY-MM-DD). Defaults to the server's date.
+   * @pattern ^\d{4}-\d{2}-\d{2}$
+   */
+  date?: string;
+};
+
+export type GetMonthlyStatsParams = {
+  /**
+   * Client's local date (YYYY-MM-DD). Defaults to the server's date.
+   * @pattern ^\d{4}-\d{2}-\d{2}$
+   */
+  date?: string;
+};
+
+export type GetAiWeeklySummaryParams = {
+  /**
+   * Client's local date (YYYY-MM-DD). Defaults to the server's date.
+   * @pattern ^\d{4}-\d{2}-\d{2}$
+   */
+  date?: string;
+};
+
+export type GetAiMonthlySummaryParams = {
+  /**
+   * Client's local date (YYYY-MM-DD). Defaults to the server's date.
+   * @pattern ^\d{4}-\d{2}-\d{2}$
+   */
+  date?: string;
 };

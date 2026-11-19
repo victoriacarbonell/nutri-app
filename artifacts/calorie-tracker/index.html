@@ -1,13 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, viewport-fit=cover" />
     <title>NutriApp</title>
+    <meta name="description" content="Seguimiento de calorías y nutrición" />
     <link rel="icon" type="image/svg+xml" href="/app-icon.svg" media="(prefers-color-scheme: light)" />
     <link rel="icon" type="image/svg+xml" href="/app-icon-dark.svg" media="(prefers-color-scheme: dark)" />
-    <link rel="apple-touch-icon" href="/app-icon.png" />
-    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+    <!-- El manifest lo inyecta vite-plugin-pwa al compilar. -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="NutriApp" />
     <meta name="theme-color" content="#9bbd7e" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#111827" media="(prefers-color-scheme: dark)" />
     <link rel="preconnect" href="https://fonts.googleapis.com">

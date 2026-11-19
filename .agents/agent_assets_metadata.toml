@@ -1,8 +1,0 @@
-uploads = []
-generated = []
-
-[[outputs]]
-id = "fM3-xoEVi_2-fwP9mfASB"
-uri = "file://README.md"
-type = "text"
-title = "README — NutriApp"

@@ -10,13 +10,14 @@ import AddExerciseModal from "@/components/AddExerciseModal";
 import { useDeleteLogEntry, useDeleteExercise, getGetDayLogQueryKey as getDayLogKey } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { formatKcal } from "@/lib/format";
 
 export default function Home() {
   const [, setLocation] = useLocation();
   const [showExerciseModal, setShowExerciseModal] = useState(false);
   const today = format(new Date(), "yyyy-MM-dd");
 
-  const { data: summary, isLoading: isLoadingSummary } = useGetTodaySummary({ query: { queryKey: getGetTodaySummaryQueryKey() } });
+  const { data: summary, isLoading: isLoadingSummary } = useGetTodaySummary({ date: today }, { query: { queryKey: getGetTodaySummaryQueryKey({ date: today }) } });
   const { data: dayLog, isLoading: isLoadingLog } = useGetDayLog(today, { query: { queryKey: getGetDayLogQueryKey(today) } });
 
   const queryClient = useQueryClient();
@@ -25,7 +26,7 @@ export default function Home() {
   const deleteExercise = useDeleteExercise();
 
   const handleDeleteEntry = (id: number) => {
-    deleteEntry.mutate({ date: today, id }, {
+    deleteEntry.mutate({ date: today, entryId: id }, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getGetDayLogQueryKey(today) });
         queryClient.invalidateQueries({ queryKey: getGetTodaySummaryQueryKey() });
@@ -99,7 +100,7 @@ export default function Home() {
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-4xl font-serif text-foreground">{remaining}</span>
+              <span className="text-4xl font-serif text-foreground">{formatKcal(remaining)}</span>
               <span className="text-xs text-muted-foreground uppercase tracking-wider font-medium mt-1">restantes</span>
             </div>
           </div>
@@ -107,13 +108,13 @@ export default function Home() {
           <div className="flex justify-between w-full px-2 text-center">
             <div className="flex-1">
               <div className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1">Consumidas</div>
-              <div className="font-semibold text-lg">{consumed}</div>
+              <div className="font-semibold text-lg">{formatKcal(consumed)}</div>
             </div>
             <div className="w-px bg-border my-1" />
             <div className="flex-1">
               <div className="text-xs text-muted-foreground uppercase tracking-wider font-medium mb-1">Quemadas</div>
               <div className="font-semibold text-lg text-orange-500 flex items-center justify-center gap-1">
-                <Flame size={14} /> {burned}
+                <Flame size={14} /> {formatKcal(burned)}
               </div>
             </div>
           </div>
@@ -122,15 +123,15 @@ export default function Home() {
         {/* Macros */}
         <section className="bg-card rounded-3xl p-5 shadow-sm border flex justify-between">
           {[
-            { label: "Proteínas", value: summary?.totalProtein ?? 0, goal: summary?.proteinGoalG ?? 50, color: "chart-1" },
-            { label: "Carbos", value: summary?.totalCarbs ?? 0, goal: summary?.carbsGoalG ?? 250, color: "chart-3" },
-            { label: "Grasas", value: summary?.totalFat ?? 0, goal: summary?.fatGoalG ?? 65, color: "chart-2" },
+            { label: "Proteínas", value: summary?.totalProtein ?? 0, goal: summary?.proteinGoalG ?? 50, textClass: "text-chart-1", barClass: "bg-chart-1" },
+            { label: "Carbos", value: summary?.totalCarbs ?? 0, goal: summary?.carbsGoalG ?? 250, textClass: "text-chart-3", barClass: "bg-chart-3" },
+            { label: "Grasas", value: summary?.totalFat ?? 0, goal: summary?.fatGoalG ?? 65, textClass: "text-chart-2", barClass: "bg-chart-2" },
           ].map((macro, i) => (
             <div key={macro.label} className={`flex-1 flex flex-col items-center ${i < 2 ? "border-r" : ""}`}>
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium mb-2">{macro.label}</span>
-              <span className={`font-semibold text-${macro.color}`}>{Math.round(macro.value)}g</span>
+              <span className={`font-semibold ${macro.textClass}`}>{Math.round(macro.value)}g</span>
               <div className="w-full bg-secondary h-1.5 rounded-full mt-2 overflow-hidden max-w-[40px]">
-                <div className={`bg-${macro.color} h-full`} style={{ width: `${Math.min((macro.value / macro.goal) * 100, 100)}%` }} />
+                <div className={`${macro.barClass} h-full`} style={{ width: `${Math.min((macro.value / macro.goal) * 100, 100)}%` }} />
               </div>
             </div>
           ))}
@@ -150,7 +151,7 @@ export default function Home() {
               <div className="flex items-center justify-between">
                 <div>
                   <span className="font-medium capitalize text-foreground">{meal.mealType}</span>
-                  <span className="text-xs text-muted-foreground ml-2">{meal.totalCalories} kcal</span>
+                  <span className="text-xs text-muted-foreground ml-2">{formatKcal(meal.totalCalories)} kcal</span>
                 </div>
                 <Button
                   size="icon" variant="ghost"
@@ -170,7 +171,7 @@ export default function Home() {
                         <span className="text-xs text-muted-foreground ml-1">({entry.amountGrams}g)</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{entry.calories} kcal</span>
+                        <span className="font-medium">{formatKcal(entry.calories)} kcal</span>
                         <button
                           onClick={() => handleDeleteEntry(entry.id)}
                           className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"

@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useGetProfile, useUpdateProfile, getGetProfileQueryKey, getGetTodaySummaryQueryKey } from "@workspace/api-client-react";
+import {
+  useGetProfile, useUpdateProfile, getGetProfileQueryKey, getGetTodaySummaryQueryKey,
+  useGetMe, getGetMeQueryKey, useLogout,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Calculator, CheckCircle2 } from "lucide-react";
+import { Loader2, Calculator, CheckCircle2, LogOut } from "lucide-react";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -149,7 +152,7 @@ export default function Profile() {
               <FormField control={form.control} name="gender" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Género</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select key={field.value} onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="bg-secondary/30 border-none rounded-xl h-12">
                         <SelectValue placeholder="Selecciona..." />
@@ -192,7 +195,7 @@ export default function Profile() {
             <FormField control={form.control} name="activityLevel" render={({ field }) => (
               <FormItem>
                 <FormLabel>Nivel de Actividad</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select key={field.value} onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="bg-secondary/30 border-none rounded-xl h-12">
                       <SelectValue placeholder="Selecciona..." />
@@ -214,7 +217,7 @@ export default function Profile() {
             <FormField control={form.control} name="goal" render={({ field }) => (
               <FormItem>
                 <FormLabel>Objetivo</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select key={field.value} onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="bg-secondary/30 border-none rounded-xl h-12">
                       <SelectValue placeholder="Selecciona..." />
@@ -266,6 +269,41 @@ export default function Profile() {
           </form>
         </Form>
       </div>
+
+      <AccountSection />
+    </div>
+  );
+}
+
+function AccountSection() {
+  const queryClient = useQueryClient();
+  const { data: me } = useGetMe({ query: { queryKey: getGetMeQueryKey() } });
+  const logout = useLogout();
+
+  const handleLogout = () => {
+    logout.mutate(undefined, {
+      onSettled: () => {
+        // Primero se marca que no hay usuario, para que la puerta de
+        // autenticación (App.tsx) muestre el login al instante; después se
+        // borran los datos del usuario anterior. clear() a secas no avisa de
+        // forma fiable a los componentes montados.
+        const meKey = getGetMeQueryKey();
+        queryClient.setQueryData(meKey, null);
+        queryClient.removeQueries({ predicate: (q) => q.queryKey[0] !== meKey[0] });
+      },
+    });
+  };
+
+  return (
+    <div className="bg-card rounded-3xl p-5 shadow-sm border mt-6 flex items-center justify-between gap-4">
+      <div className="min-w-0">
+        <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">Cuenta</p>
+        <p className="text-sm font-medium truncate">{me?.email ?? ""}</p>
+      </div>
+      <Button variant="outline" className="rounded-xl shrink-0" onClick={handleLogout} disabled={logout.isPending}>
+        {logout.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4 mr-2" />}
+        Cerrar sesión
+      </Button>
     </div>
   );
 }

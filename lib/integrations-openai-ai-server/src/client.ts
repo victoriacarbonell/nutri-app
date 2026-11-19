@@ -1,18 +1,16 @@
 import OpenAI from "openai";
 
-if (!process.env.AI_INTEGRATIONS_OPENAI_BASE_URL) {
-  throw new Error(
-    "AI_INTEGRATIONS_OPENAI_BASE_URL must be set. Did you forget to provision the OpenAI AI integration?",
-  );
-}
+// La IA es opcional: sin clave, el servidor arranca igual y las rutas de IA
+// responden 503. Se aceptan también las variables antiguas de Replit.
+const apiKey =
+  process.env.OPENAI_API_KEY ?? process.env.AI_INTEGRATIONS_OPENAI_API_KEY;
+const baseURL =
+  process.env.OPENAI_BASE_URL ?? process.env.AI_INTEGRATIONS_OPENAI_BASE_URL;
 
-if (!process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
-  throw new Error(
-    "AI_INTEGRATIONS_OPENAI_API_KEY must be set. Did you forget to provision the OpenAI AI integration?",
-  );
-}
+export const isAiEnabled = Boolean(apiKey);
 
-export const openai = new OpenAI({
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY,
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-});
+export const openai: OpenAI | null = apiKey
+  ? new OpenAI({ apiKey, ...(baseURL ? { baseURL } : {}) })
+  : null;
+
+export const AI_MODEL = process.env.OPENAI_MODEL ?? "gpt-5.1";

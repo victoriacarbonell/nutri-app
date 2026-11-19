@@ -7,6 +7,9 @@
       "path": "./lib/db"
     },
     {
+      "path": "./lib/shared"
+    },
+    {
       "path": "./lib/api-client-react"
     },
     {
@@ -14,9 +17,6 @@
     },
     {
       "path": "./lib/integrations-openai-ai-server"
-    },
-    {
-      "path": "./lib/integrations-openai-ai-react"
     }
   ]
 }

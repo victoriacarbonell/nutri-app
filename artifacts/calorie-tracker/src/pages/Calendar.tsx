@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { formatKcal } from "@/lib/format";
 
 // ─── Color helpers ───────────────────────────────────────────────────────────
 
@@ -45,9 +46,9 @@ function DayDetailModal({ date, calendarDay, onClose }: DayDetailModalProps) {
     ? Math.round((calendarDay.totalCalories / calendarDay.calorieGoal) * 100)
     : 0;
 
-  const totalProtein = dayLog?.meals.reduce((s, m) => s + m.entries.reduce((ss, e) => ss + (e.food?.proteinG ?? 0) * (e.amountGrams / 100), 0), 0) ?? 0;
-  const totalCarbs   = dayLog?.meals.reduce((s, m) => s + m.entries.reduce((ss, e) => ss + (e.food?.carbsG ?? 0) * (e.amountGrams / 100), 0), 0) ?? 0;
-  const totalFat     = dayLog?.meals.reduce((s, m) => s + m.entries.reduce((ss, e) => ss + (e.food?.fatG ?? 0) * (e.amountGrams / 100), 0), 0) ?? 0;
+  const totalProtein = dayLog?.totalProtein ?? 0;
+  const totalCarbs = dayLog?.totalCarbs ?? 0;
+  const totalFat = dayLog?.totalFat ?? 0;
   const totalExercise = dayLog?.exercises?.reduce((s, e) => s + e.caloriesBurned, 0) ?? 0;
 
   const style = cellStyle(calendarDay?.status ?? "no_data", calendarDay?.hasLog ?? false, false);
@@ -76,7 +77,7 @@ function DayDetailModal({ date, calendarDay, onClose }: DayDetailModalProps) {
               <div className="mt-4">
                 <div className="flex items-end gap-2">
                   <span className={cn("text-4xl font-serif font-medium", style.text)}>
-                    {calendarDay.totalCalories}
+                    {formatKcal(calendarDay.totalCalories)}
                   </span>
                   <span className="text-sm opacity-60 pb-1">/ {calendarDay.calorieGoal} kcal</span>
                 </div>
@@ -138,13 +139,13 @@ function DayDetailModal({ date, calendarDay, onClose }: DayDetailModalProps) {
                 <div key={meal.mealType}>
                   <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 flex justify-between">
                     <span>{meal.mealType}</span>
-                    <span>{meal.totalCalories} kcal</span>
+                    <span>{formatKcal(meal.totalCalories)} kcal</span>
                   </h4>
                   <div className="space-y-1.5">
                     {meal.entries.map(entry => (
                       <div key={entry.id} className="flex justify-between text-sm">
                         <span className="text-foreground">{entry.food?.name ?? entry.recipe?.name}</span>
-                        <span className="text-muted-foreground">{entry.calories} kcal</span>
+                        <span className="text-muted-foreground">{formatKcal(entry.calories)} kcal</span>
                       </div>
                     ))}
                   </div>

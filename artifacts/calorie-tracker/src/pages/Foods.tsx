@@ -1,169 +1,14 @@
 import { useState, useEffect } from "react";
-import {
-  useGetFoods, getGetFoodsQueryKey,
-  useCreateLogEntry, getGetDayLogQueryKey, getGetTodaySummaryQueryKey,
-} from "@workspace/api-client-react";
-import { Search, Plus, Loader2, ScanBarcode, X } from "lucide-react";
+import { useGetFoods, getGetFoodsQueryKey } from "@workspace/api-client-react";
+import { Search, Plus, ScanBarcode, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import CreateFoodModal from "@/components/CreateFoodModal";
 import LogEntryModal from "@/components/LogEntryModal";
 import type { Food } from "@workspace/api-client-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-
-// ─── Category config ──────────────────────────────────────────────────────────
-
-const CATEGORIES = [
-  { value: "frutas",    label: "Frutas",    emoji: "🍎" },
-  { value: "verduras",  label: "Verduras",  emoji: "🥦" },
-  { value: "carnes",    label: "Carnes",    emoji: "🥩" },
-  { value: "pescados",  label: "Pescados",  emoji: "🐟" },
-  { value: "lacteos",   label: "Lácteos",   emoji: "🥛" },
-  { value: "cereales",  label: "Cereales",  emoji: "🌾" },
-  { value: "legumbres", label: "Legumbres", emoji: "🫘" },
-  { value: "bebidas",   label: "Bebidas",   emoji: "🧃" },
-  { value: "snacks",    label: "Snacks",    emoji: "🍿" },
-  { value: "otros",     label: "Otros",     emoji: "🍽️" },
-];
-
-function getCategoryEmoji(category: string) {
-  return CATEGORIES.find(c => c.value === category.toLowerCase())?.emoji ?? "🍽️";
-}
-
-function normalizeCategory(value: string) {
-  const normalized = value.trim().toLowerCase();
-  if (normalized.includes("fruta")) return "frutas";
-  if (normalized.includes("verdura")) return "verduras";
-  if (normalized.includes("carne") || normalized.includes("pollo") || normalized.includes("cerdo")) return "carnes";
-  if (normalized.includes("pesc")) return "pescados";
-  if (normalized.includes("huevo")) return "huevos";
-  if (normalized.includes("aceit") || normalized.includes("grasa") || normalized.includes("mante")) return "aceites y grasas";
-  if (normalized.includes("fruto seco") || normalized.includes("almendra") || normalized.includes("nuez") || normalized.includes("avellana")) return "frutos secos";
-  if (normalized.includes("láct") || normalized.includes("lact")) return "lacteos";
-  if (normalized.includes("cereal") || normalized.includes("pasta") || normalized.includes("arroz") || normalized.includes("pan")) return "cereales";
-  if (normalized.includes("legumb") || normalized.includes("garban") || normalized.includes("lentej")) return "legumbres";
-  if (normalized.includes("bebid") || normalized.includes("agua") || normalized.includes("zumo") || normalized.includes("jugo")) return "bebidas";
-  if (normalized.includes("snack") || normalized.includes("dulc") || normalized.includes("boll") || normalized.includes("postre")) return "snacks";
-  return normalized;
-}
-
-function inferCategory(food: Food) {
-  const fromCategory = normalizeCategory(food.category || "");
-  if (fromCategory && fromCategory !== "otros") return fromCategory;
-  const name = `${food.name} ${food.brand ?? ""}`.toLowerCase();
-  return normalizeCategory(name);
-}
-
-// ─── Quick-add modal (same as before) ────────────────────────────────────────
-
-function QuickAddModal({ food, open, onOpenChange }: { food: Food | null; open: boolean; onOpenChange: (v: boolean) => void }) {
-  const [amount, setAmount] = useState("100");
-  const [mealType, setMealType] = useState("almuerzo");
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const createLogEntry = useCreateLogEntry();
-
-  useEffect(() => { if (open) setAmount("100"); }, [open]);
-  if (!food) return null;
-
-  const grams = parseFloat(amount) || 100;
-  const mult = grams / 100;
-
-  const handleSave = () => {
-    const today = format(new Date(), "yyyy-MM-dd");
-    createLogEntry.mutate(
-      { date: today, data: { mealType: mealType as any, foodId: food.id, amountGrams: grams } },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({ queryKey: getGetDayLogQueryKey(today) });
-          queryClient.invalidateQueries({ queryKey: getGetTodaySummaryQueryKey() });
-          toast({ title: "¡Añadido!", description: `${food.name} añadido a ${mealType}.` });
-          onOpenChange(false);
-        },
-        onError: () => toast({ title: "Error", description: "No se pudo añadir.", variant: "destructive" }),
-      }
-    );
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md rounded-3xl p-6">
-        <DialogHeader>
-          <div className="flex items-center gap-3 mb-1">
-            {food.photoUrl ? (
-              <span className="text-4xl">{food.photoUrl.length <= 4 ? food.photoUrl : ""}</span>
-            ) : (
-              <span className="text-4xl">{getCategoryEmoji(food.category)}</span>
-            )}
-            <div>
-              <DialogTitle className="text-xl font-serif leading-tight">{food.name}</DialogTitle>
-              {food.brand && <p className="text-sm text-muted-foreground">{food.brand}</p>}
-            </div>
-          </div>
-        </DialogHeader>
-        <div className="bg-secondary/30 p-4 rounded-2xl my-4 grid grid-cols-4 gap-2 text-center">
-          <div>
-            <p className="text-2xl font-bold">{Math.round(food.caloriesPer100g * mult)}</p>
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-1">kcal</p>
-          </div>
-          <div>
-            <p className="font-semibold text-chart-1">{(food.proteinPer100g * mult).toFixed(1)}g</p>
-            <p className="text-[10px] uppercase text-muted-foreground">Prot</p>
-          </div>
-          <div>
-            <p className="font-semibold text-chart-3">{(food.carbsPer100g * mult).toFixed(1)}g</p>
-            <p className="text-[10px] uppercase text-muted-foreground">Carb</p>
-          </div>
-          <div>
-            <p className="font-semibold text-chart-2">{(food.fatPer100g * mult).toFixed(1)}g</p>
-            <p className="text-[10px] uppercase text-muted-foreground">Grasa</p>
-          </div>
-        </div>
-        <div className="space-y-4 mb-6">
-          <div>
-            <label className="text-sm font-medium mb-1.5 block">Cantidad (g)</label>
-            <Input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="bg-secondary/30 border-none rounded-xl h-14 text-lg text-center"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1.5 block">Comida</label>
-            <Select value={mealType} onValueChange={setMealType}>
-              <SelectTrigger className="bg-secondary/30 border-none rounded-xl h-14 text-base">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="desayuno">Desayuno</SelectItem>
-                <SelectItem value="almuerzo">Almuerzo</SelectItem>
-                <SelectItem value="comida">Comida</SelectItem>
-                <SelectItem value="merienda">Merienda</SelectItem>
-                <SelectItem value="cena">Cena</SelectItem>
-                <SelectItem value="snacks">Snacks</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-        <Button
-          className="w-full h-14 rounded-2xl text-base shadow-md shadow-primary/20"
-          onClick={handleSave}
-          disabled={createLogEntry.isPending || grams <= 0}
-        >
-          {createLogEntry.isPending && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-          Añadir a Hoy
-        </Button>
-      </DialogContent>
-    </Dialog>
-  );
-}
+import { FOOD_CATEGORIES, getCategoryEmoji, inferCategory } from "@workspace/shared";
 
 // ─── Food card ────────────────────────────────────────────────────────────────
 
@@ -230,7 +75,7 @@ function CategoryChips({ selected, onChange }: { selected: string | null; onChan
       >
         Todos
       </button>
-      {CATEGORIES.map(cat => (
+      {FOOD_CATEGORIES.map(cat => (
         <button
           key={cat.value}
           onClick={() => onChange(cat.value === selected ? null : cat.value)}
@@ -256,7 +101,6 @@ export default function Foods() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [selectedFood, setSelectedFood] = useState<Food | null>(null);
-  const [quickAddFood, setQuickAddFood] = useState<Food | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(search), 400);
@@ -289,7 +133,7 @@ export default function Foods() {
 
   const sortedCategories = groupedFoods
     ? Object.keys(groupedFoods).sort((a, b) => {
-        const order = CATEGORIES.map(c => c.value);
+        const order = FOOD_CATEGORIES.map(c => c.value);
         return (order.indexOf(a) ?? 99) - (order.indexOf(b) ?? 99);
       })
     : [];
@@ -358,7 +202,7 @@ export default function Foods() {
         /* Grouped by category when browsing */
         <div className="space-y-6">
           {sortedCategories.map(cat => {
-            const catInfo = CATEGORIES.find(c => c.value === cat);
+            const catInfo = FOOD_CATEGORIES.find(c => c.value === cat);
             const items = groupedFoods[cat];
             return (
               <div key={cat}>
@@ -390,12 +234,6 @@ export default function Foods() {
           onOpenChange={(open) => !open && setSelectedFood(null)}
         />
       )}
-
-      <QuickAddModal
-        food={quickAddFood}
-        open={!!quickAddFood}
-        onOpenChange={(v) => !v && setQuickAddFood(null)}
-      />
     </div>
   );
 }

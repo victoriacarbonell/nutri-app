@@ -9,7 +9,7 @@
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "moduleResolution": "bundler",
-    "types": ["node", "vite/client"],
+    "types": ["node", "vite/client", "vite-plugin-pwa/client"],
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -19,7 +19,7 @@
       "path": "../../lib/api-client-react"
     },
     {
-      "path": "../../lib/integrations-openai-ai-react"
+      "path": "../../lib/shared"
     }
   ]
 }
