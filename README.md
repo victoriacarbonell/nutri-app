@@ -20,6 +20,19 @@ Desarrollada con ayuda del agente de IA de Replit: yo definí las funcionalidade
 - **Resúmenes IA** — análisis semanal y mensual con puntuación, observaciones y recomendaciones personalizadas
 - **Estadísticas** — gráficos de progreso de calorías, macros y peso
 
+## Capturas
+
+Capturas en tamaño móvil con datos de demostración.
+
+| | | |
+|:-:|:-:|:-:|
+| <img src="docs/screenshots/02-hoy.png" width="220" alt="Hoy"> | <img src="docs/screenshots/03-alimentos.png" width="220" alt="Alimentos"> | <img src="docs/screenshots/04-recetas.png" width="220" alt="Recetas"> |
+| **Hoy**<br>Calorías restantes, macros del día y comidas por franja | **Alimentos**<br>Base de alimentos agrupada por categoría | **Recetas**<br>Recetas con kcal y macros por porción |
+| <img src="docs/screenshots/05-calendario.png" width="220" alt="Calendario"> | <img src="docs/screenshots/06-estadisticas.png" width="220" alt="Estadísticas"> | <img src="docs/screenshots/07-progreso.png" width="220" alt="Progreso"> |
+| **Calendario**<br>Adherencia diaria al objetivo por colores | **Estadísticas**<br>Calorías de la semana y reparto de macros | **Progreso**<br>Evolución del peso |
+| <img src="docs/screenshots/08-escanear.png" width="220" alt="Escanear"> | <img src="docs/screenshots/09-perfil.png" width="220" alt="Perfil"> | <img src="docs/screenshots/01-login.png" width="220" alt="Acceso"> |
+| **Escanear**<br>Análisis de fotos con IA y código de barras | **Perfil**<br>Datos personales y objetivo Harris-Benedict | **Acceso**<br>Inicio de sesión y registro |
+
 ## Tecnología
 
 | Capa | Stack |

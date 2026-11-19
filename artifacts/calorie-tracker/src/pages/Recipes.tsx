@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import CreateRecipeModal from "@/components/CreateRecipeModal";
+import { formatKcal, formatGrams } from "@/lib/format";
 
 export default function Recipes() {
   const [search, setSearch] = useState("");
@@ -72,7 +73,7 @@ export default function Recipes() {
               <div className="flex justify-between items-start mb-2">
                 <h3 className="font-medium text-lg text-foreground leading-tight">{recipe.name}</h3>
                 <span className="bg-secondary text-secondary-foreground text-xs font-semibold px-2 py-1 rounded-lg ml-2 shrink-0">
-                  {recipe.caloriesPerServing} kcal
+                  {formatKcal(recipe.caloriesPerServing)} kcal
                 </span>
               </div>
               {recipe.description && (
@@ -82,13 +83,13 @@ export default function Recipes() {
               <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground mb-4">
                 <span>{recipe.servings} porciones</span>
                 <span>•</span>
-                <span>{recipe.totalGrams}g total</span>
+                <span>{formatGrams(recipe.totalGrams)}g total</span>
               </div>
 
               <div className="flex gap-2 text-[10px] font-medium">
-                <span className="bg-chart-1/10 text-chart-1 px-2 py-1 rounded-md">P: {recipe.proteinPerServing}g</span>
-                <span className="bg-chart-3/10 text-chart-3 px-2 py-1 rounded-md">C: {recipe.carbsPerServing}g</span>
-                <span className="bg-chart-2/10 text-chart-2 px-2 py-1 rounded-md">G: {recipe.fatPerServing}g</span>
+                <span className="bg-chart-1/10 text-chart-1 px-2 py-1 rounded-md">P: {formatGrams(recipe.proteinPerServing)}g</span>
+                <span className="bg-chart-3/10 text-chart-3 px-2 py-1 rounded-md">C: {formatGrams(recipe.carbsPerServing)}g</span>
+                <span className="bg-chart-2/10 text-chart-2 px-2 py-1 rounded-md">G: {formatGrams(recipe.fatPerServing)}g</span>
               </div>
             </div>
           ))

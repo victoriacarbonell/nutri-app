@@ -152,7 +152,7 @@ export default function Profile() {
               <FormField control={form.control} name="gender" render={({ field }) => (
                 <FormItem>
                   <FormLabel>Género</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select key={field.value} onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="bg-secondary/30 border-none rounded-xl h-12">
                         <SelectValue placeholder="Selecciona..." />
@@ -195,7 +195,7 @@ export default function Profile() {
             <FormField control={form.control} name="activityLevel" render={({ field }) => (
               <FormItem>
                 <FormLabel>Nivel de Actividad</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select key={field.value} onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="bg-secondary/30 border-none rounded-xl h-12">
                       <SelectValue placeholder="Selecciona..." />
@@ -217,7 +217,7 @@ export default function Profile() {
             <FormField control={form.control} name="goal" render={({ field }) => (
               <FormItem>
                 <FormLabel>Objetivo</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select key={field.value} onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger className="bg-secondary/30 border-none rounded-xl h-12">
                       <SelectValue placeholder="Selecciona..." />
