@@ -33,7 +33,7 @@ const foodSchema = z.object({
   proteinPer100g: z.coerce.number().min(0),
   carbsPer100g: z.coerce.number().min(0),
   fatPer100g: z.coerce.number().min(0),
-  unit: z.string().default("g"),
+  unit: z.enum(["g", "ml"]).default("g"),
   photoUrl: z.string().optional().nullable(),
 });
 

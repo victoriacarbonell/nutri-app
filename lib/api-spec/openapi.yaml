@@ -48,13 +48,14 @@ paths:
       summary: Get user profile
       responses:
         "200":
-          description: User profile
+          description: User profile, or null if it has not been created yet
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserProfile"
-        "404":
-          description: Not found
+                nullable: true
+        "401":
+          $ref: "#/components/responses/Unauthorized"
     put:
       operationId: updateProfile
       tags: [profile]
@@ -72,6 +73,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UserProfile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /foods:
     get:
@@ -91,6 +96,11 @@ paths:
           in: query
           schema:
             type: string
+        - name: hasBarcode
+          in: query
+          description: Only foods that have a barcode.
+          schema:
+            type: boolean
         - name: limit
           in: query
           schema:
@@ -108,6 +118,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FoodListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
     post:
       operationId: createFood
       tags: [foods]
@@ -125,6 +139,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Food"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /foods/{id}:
     get:
@@ -146,6 +166,10 @@ paths:
                 $ref: "#/components/schemas/Food"
         "404":
           description: Not found
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
     put:
       operationId: updateFood
       tags: [foods]
@@ -169,6 +193,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Food"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
     delete:
       operationId: deleteFood
       tags: [foods]
@@ -182,6 +214,14 @@ paths:
       responses:
         "204":
           description: Deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /foods/categories:
     get:
@@ -197,6 +237,8 @@ paths:
                 type: array
                 items:
                   type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /foods/{id}/portions:
     get:
@@ -218,6 +260,12 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Portion"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
     post:
       operationId: createPortion
       tags: [foods]
@@ -241,8 +289,14 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Portion"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
-  /portions/{id}:
+  /foods/portions/{id}:
     delete:
       operationId: deletePortion
       tags: [foods]
@@ -256,6 +310,12 @@ paths:
       responses:
         "204":
           description: Deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /recipes:
     get:
@@ -276,6 +336,10 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Recipe"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
     post:
       operationId: createRecipe
       tags: [recipes]
@@ -293,6 +357,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Recipe"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /recipes/{id}:
     get:
@@ -314,6 +382,10 @@ paths:
                 $ref: "#/components/schemas/RecipeDetail"
         "404":
           description: Not found
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
     put:
       operationId: updateRecipe
       tags: [recipes]
@@ -337,6 +409,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Recipe"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
     delete:
       operationId: deleteRecipe
       tags: [recipes]
@@ -350,6 +428,12 @@ paths:
       responses:
         "204":
           description: Deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /logs/{date}:
     get:
@@ -362,6 +446,7 @@ paths:
           required: true
           schema:
             type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
       responses:
         "200":
           description: Day log
@@ -369,6 +454,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DayLog"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /logs/{date}/entries:
     post:
@@ -381,6 +470,7 @@ paths:
           required: true
           schema:
             type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
       requestBody:
         required: true
         content:
@@ -394,6 +484,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LogEntry"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /logs/{date}/entries/{entryId}:
     put:
@@ -406,6 +502,7 @@ paths:
           required: true
           schema:
             type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
         - name: entryId
           in: path
           required: true
@@ -424,6 +521,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LogEntry"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
     delete:
       operationId: deleteLogEntry
       tags: [logs]
@@ -434,6 +537,7 @@ paths:
           required: true
           schema:
             type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
         - name: entryId
           in: path
           required: true
@@ -442,17 +546,24 @@ paths:
       responses:
         "204":
           description: Deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /exercises:
     get:
       operationId: getExercises
       tags: [exercises]
-      summary: List exercise entries for a date range
+      summary: List exercise entries, optionally for a single date
       parameters:
         - name: date
           in: query
           schema:
             type: string
+            pattern: '^\d{4}-\d{2}-\d{2}$'
       responses:
         "200":
           description: Exercise entries
@@ -462,6 +573,10 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Exercise"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
     post:
       operationId: createExercise
       tags: [exercises]
@@ -479,6 +594,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Exercise"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /exercises/{id}:
     delete:
@@ -494,6 +613,12 @@ paths:
       responses:
         "204":
           description: Deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /weight:
     get:
@@ -515,6 +640,10 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WeightLog"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
     post:
       operationId: createWeightLog
       tags: [weight]
@@ -532,6 +661,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/WeightLog"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /weight/{id}:
     delete:
@@ -547,6 +680,12 @@ paths:
       responses:
         "204":
           description: Deleted
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /dashboard/today:
     get:
@@ -567,6 +706,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TodaySummary"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /dashboard/calendar/{year}/{month}:
     get:
@@ -579,11 +722,15 @@ paths:
           required: true
           schema:
             type: integer
+            minimum: 2000
+            maximum: 2100
         - name: month
           in: path
           required: true
           schema:
             type: integer
+            minimum: 1
+            maximum: 12
       responses:
         "200":
           description: Monthly calendar data
@@ -593,6 +740,10 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/CalendarDay"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /dashboard/stats/weekly:
     get:
@@ -613,6 +764,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PeriodStats"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /dashboard/stats/monthly:
     get:
@@ -633,6 +788,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PeriodStats"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 
   /ai/analyze-image:
     post:
@@ -652,6 +811,16 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/FoodAnalysisResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 
   /ai/weekly-summary:
     get:
@@ -672,6 +841,16 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AiSummary"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 
   /ai/monthly-summary:
     get:
@@ -692,6 +871,16 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AiSummary"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "502":
+          $ref: "#/components/responses/BadGateway"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 
   /auth/register:
     post:
@@ -715,6 +904,8 @@ paths:
           description: Invalid invite code
         "409":
           description: Email already registered
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /auth/login:
     post:
@@ -736,6 +927,8 @@ paths:
                 $ref: "#/components/schemas/AuthUser"
         "401":
           description: Invalid credentials
+        "400":
+          $ref: "#/components/responses/BadRequest"
 
   /auth/logout:
     post:
@@ -773,6 +966,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AiUsage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 
 components:
   schemas:
@@ -890,6 +1087,7 @@ components:
           nullable: true
         unit:
           type: string
+          enum: [g, ml]
           default: g
         createdAt:
           type: string
@@ -941,6 +1139,7 @@ components:
           nullable: true
         unit:
           type: string
+          enum: [g, ml]
           default: g
       required: [name, category, caloriesPer100g, proteinPer100g, carbsPer100g, fatPer100g]
 
@@ -1134,6 +1333,7 @@ components:
 
     CreateLogEntryBody:
       type: object
+      description: Exactly one of foodId or recipeId must be given.
       properties:
         mealType:
           type: string
@@ -1181,6 +1381,7 @@ components:
       properties:
         date:
           type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
         name:
           type: string
         caloriesBurned:
@@ -1229,6 +1430,7 @@ components:
       properties:
         date:
           type: string
+          pattern: '^\d{4}-\d{2}-\d{2}$'
         weightKg:
           type: number
         waistCm:
@@ -1456,3 +1658,69 @@ components:
         remaining:
           type: integer
       required: [used, limit, remaining]
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Machine-readable code, e.g. validation_error, not_found, ai_limit_reached
+        message:
+          type: string
+          description: Human-readable message in Spanish
+        issues:
+          type: array
+          description: Only for validation errors
+          items:
+            type: object
+            properties:
+              path:
+                type: string
+              message:
+                type: string
+            required: [path, message]
+      required: [error, message]
+
+  responses:
+    BadRequest:
+      description: Invalid parameters or body
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: Not logged in, or the session has expired
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: The resource does not exist or belongs to another user
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Duplicate barcode, or the food is used by a recipe
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    TooManyRequests:
+      description: Daily AI usage limit reached
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    BadGateway:
+      description: The AI returned a response that could not be used
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServiceUnavailable:
+      description: AI is not configured on this server
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"

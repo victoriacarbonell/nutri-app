@@ -17,28 +17,30 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary Get user profile
  */
-export const GetProfileResponse = zod.object({
-  id: zod.number(),
-  name: zod.string(),
-  age: zod.number(),
-  gender: zod.enum(["male", "female", "other"]),
-  heightCm: zod.number(),
-  weightKg: zod.number(),
-  activityLevel: zod.enum([
-    "sedentary",
-    "light",
-    "moderate",
-    "active",
-    "very_active",
-  ]),
-  goal: zod.enum(["lose", "maintain", "gain"]),
-  manualCalorieGoal: zod.number().nullish(),
-  calculatedCalorieGoal: zod.number(),
-  minCalories: zod.number().nullish(),
-  maxCalories: zod.number().nullish(),
-  createdAt: zod.string(),
-  updatedAt: zod.string(),
-});
+export const GetProfileResponse = zod
+  .object({
+    id: zod.number(),
+    name: zod.string(),
+    age: zod.number(),
+    gender: zod.enum(["male", "female", "other"]),
+    heightCm: zod.number(),
+    weightKg: zod.number(),
+    activityLevel: zod.enum([
+      "sedentary",
+      "light",
+      "moderate",
+      "active",
+      "very_active",
+    ]),
+    goal: zod.enum(["lose", "maintain", "gain"]),
+    manualCalorieGoal: zod.number().nullish(),
+    calculatedCalorieGoal: zod.number(),
+    minCalories: zod.number().nullish(),
+    maxCalories: zod.number().nullish(),
+    createdAt: zod.string(),
+    updatedAt: zod.string(),
+  })
+  .nullable();
 
 /**
  * @summary Create or update user profile
@@ -95,6 +97,10 @@ export const GetFoodsQueryParams = zod.object({
   q: zod.coerce.string().optional(),
   category: zod.coerce.string().optional(),
   barcode: zod.coerce.string().optional(),
+  hasBarcode: zod.coerce
+    .boolean()
+    .optional()
+    .describe("Only foods that have a barcode."),
   limit: zod.coerce.number().default(getFoodsQueryLimitDefault),
   offset: zod.coerce.number().default(getFoodsQueryOffsetDefault),
 });
@@ -117,7 +123,7 @@ export const GetFoodsResponse = zod.object({
       sodiumMgPer100g: zod.number().nullish(),
       photoUrl: zod.string().nullish(),
       barcode: zod.string().nullish(),
-      unit: zod.string().default(getFoodsResponseFoodsItemUnitDefault),
+      unit: zod.enum(["g", "ml"]).default(getFoodsResponseFoodsItemUnitDefault),
       createdAt: zod.string(),
     }),
   ),
@@ -142,7 +148,7 @@ export const CreateFoodBody = zod.object({
   sodiumMgPer100g: zod.number().nullish(),
   photoUrl: zod.string().nullish(),
   barcode: zod.string().nullish(),
-  unit: zod.string().default(createFoodBodyUnitDefault),
+  unit: zod.enum(["g", "ml"]).default(createFoodBodyUnitDefault),
 });
 
 /**
@@ -168,7 +174,7 @@ export const GetFoodResponse = zod.object({
   sodiumMgPer100g: zod.number().nullish(),
   photoUrl: zod.string().nullish(),
   barcode: zod.string().nullish(),
-  unit: zod.string().default(getFoodResponseUnitDefault),
+  unit: zod.enum(["g", "ml"]).default(getFoodResponseUnitDefault),
   createdAt: zod.string(),
 });
 
@@ -194,7 +200,7 @@ export const UpdateFoodBody = zod.object({
   sodiumMgPer100g: zod.number().nullish(),
   photoUrl: zod.string().nullish(),
   barcode: zod.string().nullish(),
-  unit: zod.string().default(updateFoodBodyUnitDefault),
+  unit: zod.enum(["g", "ml"]).default(updateFoodBodyUnitDefault),
 });
 
 export const updateFoodResponseUnitDefault = `g`;
@@ -213,7 +219,7 @@ export const UpdateFoodResponse = zod.object({
   sodiumMgPer100g: zod.number().nullish(),
   photoUrl: zod.string().nullish(),
   barcode: zod.string().nullish(),
-  unit: zod.string().default(updateFoodResponseUnitDefault),
+  unit: zod.enum(["g", "ml"]).default(updateFoodResponseUnitDefault),
   createdAt: zod.string(),
 });
 
@@ -353,7 +359,7 @@ export const GetRecipeResponse = zod
             photoUrl: zod.string().nullish(),
             barcode: zod.string().nullish(),
             unit: zod
-              .string()
+              .enum(["g", "ml"])
               .default(getRecipeResponseTwoIngredientsItemFoodUnitDefault),
             createdAt: zod.string(),
           }),
@@ -411,8 +417,10 @@ export const DeleteRecipeParams = zod.object({
 /**
  * @summary Get all food log entries for a date (YYYY-MM-DD)
  */
+export const getDayLogPathDateRegExp = new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
+
 export const GetDayLogParams = zod.object({
-  date: zod.coerce.string(),
+  date: zod.coerce.string().regex(getDayLogPathDateRegExp),
 });
 
 export const getDayLogResponseMealsItemEntriesItemFoodUnitDefault = `g`;
@@ -458,7 +466,7 @@ export const GetDayLogResponse = zod.object({
               photoUrl: zod.string().nullish(),
               barcode: zod.string().nullish(),
               unit: zod
-                .string()
+                .enum(["g", "ml"])
                 .default(getDayLogResponseMealsItemEntriesItemFoodUnitDefault),
               createdAt: zod.string(),
             })
@@ -514,29 +522,39 @@ export const GetDayLogResponse = zod.object({
 /**
  * @summary Add a food or recipe to a meal slot
  */
+export const createLogEntryPathDateRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+
 export const CreateLogEntryParams = zod.object({
-  date: zod.coerce.string(),
+  date: zod.coerce.string().regex(createLogEntryPathDateRegExp),
 });
 
-export const CreateLogEntryBody = zod.object({
-  mealType: zod.enum([
-    "desayuno",
-    "almuerzo",
-    "comida",
-    "merienda",
-    "cena",
-    "snacks",
-  ]),
-  foodId: zod.number().nullish(),
-  recipeId: zod.number().nullish(),
-  amountGrams: zod.number(),
-});
+export const CreateLogEntryBody = zod
+  .object({
+    mealType: zod.enum([
+      "desayuno",
+      "almuerzo",
+      "comida",
+      "merienda",
+      "cena",
+      "snacks",
+    ]),
+    foodId: zod.number().nullish(),
+    recipeId: zod.number().nullish(),
+    amountGrams: zod.number(),
+  })
+  .describe("Exactly one of foodId or recipeId must be given.");
 
 /**
  * @summary Update a log entry quantity
  */
+export const updateLogEntryPathDateRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+
 export const UpdateLogEntryParams = zod.object({
-  date: zod.coerce.string(),
+  date: zod.coerce.string().regex(updateLogEntryPathDateRegExp),
   entryId: zod.coerce.number(),
 });
 
@@ -573,7 +591,9 @@ export const UpdateLogEntryResponse = zod.object({
       sodiumMgPer100g: zod.number().nullish(),
       photoUrl: zod.string().nullish(),
       barcode: zod.string().nullish(),
-      unit: zod.string().default(updateLogEntryResponseFoodUnitDefault),
+      unit: zod
+        .enum(["g", "ml"])
+        .default(updateLogEntryResponseFoodUnitDefault),
       createdAt: zod.string(),
     })
     .nullish(),
@@ -604,16 +624,22 @@ export const UpdateLogEntryResponse = zod.object({
 /**
  * @summary Remove a food from a meal
  */
+export const deleteLogEntryPathDateRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+
 export const DeleteLogEntryParams = zod.object({
-  date: zod.coerce.string(),
+  date: zod.coerce.string().regex(deleteLogEntryPathDateRegExp),
   entryId: zod.coerce.number(),
 });
 
 /**
- * @summary List exercise entries for a date range
+ * @summary List exercise entries, optionally for a single date
  */
+export const getExercisesQueryDateRegExp = new RegExp("^\\d{4}-\\d{2}-\\d{2}$");
+
 export const GetExercisesQueryParams = zod.object({
-  date: zod.coerce.string().optional(),
+  date: zod.coerce.string().regex(getExercisesQueryDateRegExp).optional(),
 });
 
 export const GetExercisesResponseItem = zod.object({
@@ -630,8 +656,12 @@ export const GetExercisesResponse = zod.array(GetExercisesResponseItem);
 /**
  * @summary Log an exercise
  */
+export const createExerciseBodyDateRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+
 export const CreateExerciseBody = zod.object({
-  date: zod.string(),
+  date: zod.string().regex(createExerciseBodyDateRegExp),
   name: zod.string(),
   caloriesBurned: zod.number(),
   durationMinutes: zod.number().nullish(),
@@ -671,8 +701,12 @@ export const GetWeightLogsResponse = zod.array(GetWeightLogsResponseItem);
 /**
  * @summary Log weight and body measurements
  */
+export const createWeightLogBodyDateRegExp = new RegExp(
+  "^\\d{4}-\\d{2}-\\d{2}$",
+);
+
 export const CreateWeightLogBody = zod.object({
-  date: zod.string(),
+  date: zod.string().regex(createWeightLogBodyDateRegExp),
   weightKg: zod.number(),
   waistCm: zod.number().nullish(),
   hipCm: zod.number().nullish(),
@@ -726,9 +760,17 @@ export const GetTodaySummaryResponse = zod.object({
 /**
  * @summary Get monthly calendar data with calorie status per day
  */
+export const getMonthCalendarPathYearMin = 2000;
+export const getMonthCalendarPathYearMax = 2100;
+
+export const getMonthCalendarPathMonthMax = 12;
+
 export const GetMonthCalendarParams = zod.object({
-  year: zod.coerce.number(),
-  month: zod.coerce.number(),
+  year: zod.coerce
+    .number()
+    .min(getMonthCalendarPathYearMin)
+    .max(getMonthCalendarPathYearMax),
+  month: zod.coerce.number().min(1).max(getMonthCalendarPathMonthMax),
 });
 
 export const GetMonthCalendarResponseItem = zod.object({

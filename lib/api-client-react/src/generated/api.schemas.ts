@@ -97,6 +97,13 @@ export interface UpsertUserProfileBody {
   maxCalories?: number | null;
 }
 
+export type FoodUnit = (typeof FoodUnit)[keyof typeof FoodUnit];
+
+export const FoodUnit = {
+  g: "g",
+  ml: "ml",
+} as const;
+
 export interface Food {
   id: number;
   name: string;
@@ -111,7 +118,7 @@ export interface Food {
   sodiumMgPer100g?: number | null;
   photoUrl?: string | null;
   barcode?: string | null;
-  unit: string;
+  unit: FoodUnit;
   createdAt: string;
 }
 
@@ -119,6 +126,14 @@ export interface FoodListResponse {
   foods: Food[];
   total: number;
 }
+
+export type CreateFoodBodyUnit =
+  (typeof CreateFoodBodyUnit)[keyof typeof CreateFoodBodyUnit];
+
+export const CreateFoodBodyUnit = {
+  g: "g",
+  ml: "ml",
+} as const;
 
 export interface CreateFoodBody {
   name: string;
@@ -133,7 +148,7 @@ export interface CreateFoodBody {
   sodiumMgPer100g?: number | null;
   photoUrl?: string | null;
   barcode?: string | null;
-  unit?: string;
+  unit?: CreateFoodBodyUnit;
 }
 
 export interface Portion {
@@ -270,6 +285,9 @@ export const CreateLogEntryBodyMealType = {
   snacks: "snacks",
 } as const;
 
+/**
+ * Exactly one of foodId or recipeId must be given.
+ */
 export interface CreateLogEntryBody {
   mealType: CreateLogEntryBodyMealType;
   foodId?: number | null;
@@ -282,6 +300,7 @@ export interface UpdateLogEntryBody {
 }
 
 export interface CreateExerciseBody {
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   date: string;
   name: string;
   caloriesBurned: number;
@@ -303,6 +322,7 @@ export interface WeightLog {
 }
 
 export interface CreateWeightLogBody {
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
   date: string;
   weightKg: number;
   waistCm?: number | null;
@@ -431,10 +451,63 @@ export interface AiUsage {
   remaining: number;
 }
 
+export type ErrorResponseIssuesItem = {
+  path: string;
+  message: string;
+};
+
+export interface ErrorResponse {
+  /** Machine-readable code, e.g. validation_error, not_found, ai_limit_reached */
+  error: string;
+  /** Human-readable message in Spanish */
+  message: string;
+  /** Only for validation errors */
+  issues?: ErrorResponseIssuesItem[];
+}
+
+/**
+ * Invalid parameters or body
+ */
+export type BadRequestResponse = ErrorResponse;
+
+/**
+ * Not logged in, or the session has expired
+ */
+export type UnauthorizedResponse = ErrorResponse;
+
+/**
+ * The resource does not exist or belongs to another user
+ */
+export type NotFoundResponse = ErrorResponse;
+
+/**
+ * Duplicate barcode, or the food is used by a recipe
+ */
+export type ConflictResponse = ErrorResponse;
+
+/**
+ * Daily AI usage limit reached
+ */
+export type TooManyRequestsResponse = ErrorResponse;
+
+/**
+ * The AI returned a response that could not be used
+ */
+export type BadGatewayResponse = ErrorResponse;
+
+/**
+ * AI is not configured on this server
+ */
+export type ServiceUnavailableResponse = ErrorResponse;
+
 export type GetFoodsParams = {
   q?: string;
   category?: string;
   barcode?: string;
+  /**
+   * Only foods that have a barcode.
+   */
+  hasBarcode?: boolean;
   limit?: number;
   offset?: number;
 };
@@ -444,6 +517,9 @@ export type GetRecipesParams = {
 };
 
 export type GetExercisesParams = {
+  /**
+   * @pattern ^\d{4}-\d{2}-\d{2}$
+   */
   date?: string;
 };
 

@@ -35,8 +35,10 @@ if (corsOrigin?.length) {
   app.use(cors({ origin: corsOrigin, credentials: true }));
 }
 app.use(cookieParser());
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+// 10 MB bastan para una foto ya reducida en el navegador; 50 MB invitaba a abusar
+// de la ruta de IA.
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
 app.use("/api", router);
 app.use("/api", notFoundHandler);

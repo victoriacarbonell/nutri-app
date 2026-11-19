@@ -21,7 +21,10 @@ import type {
   AiUsage,
   AnalyzeImageBody,
   AuthUser,
+  BadGatewayResponse,
+  BadRequestResponse,
   CalendarDay,
+  ConflictResponse,
   CreateExerciseBody,
   CreateFoodBody,
   CreateLogEntryBody,
@@ -45,12 +48,16 @@ import type {
   HealthStatus,
   LogEntry,
   LoginBody,
+  NotFoundResponse,
   PeriodStats,
   Portion,
   Recipe,
   RecipeDetail,
   RegisterBody,
+  ServiceUnavailableResponse,
   TodaySummary,
+  TooManyRequestsResponse,
+  UnauthorizedResponse,
   UpdateLogEntryBody,
   UpsertUserProfileBody,
   UserProfile,
@@ -150,8 +157,8 @@ export const getGetProfileUrl = () => {
 
 export const getProfile = async (
   options?: RequestInit,
-): Promise<UserProfile> => {
-  return customFetch<UserProfile>(getGetProfileUrl(), {
+): Promise<UserProfile | null> => {
+  return customFetch<UserProfile | null>(getGetProfileUrl(), {
     ...options,
     method: "GET",
   });
@@ -163,7 +170,7 @@ export const getGetProfileQueryKey = () => {
 
 export const getGetProfileQueryOptions = <
   TData = Awaited<ReturnType<typeof getProfile>>,
-  TError = ErrorType<void>,
+  TError = ErrorType<UnauthorizedResponse>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getProfile>>,
@@ -190,7 +197,7 @@ export const getGetProfileQueryOptions = <
 export type GetProfileQueryResult = NonNullable<
   Awaited<ReturnType<typeof getProfile>>
 >;
-export type GetProfileQueryError = ErrorType<void>;
+export type GetProfileQueryError = ErrorType<UnauthorizedResponse>;
 
 /**
  * @summary Get user profile
@@ -198,7 +205,7 @@ export type GetProfileQueryError = ErrorType<void>;
 
 export function useGetProfile<
   TData = Awaited<ReturnType<typeof getProfile>>,
-  TError = ErrorType<void>,
+  TError = ErrorType<UnauthorizedResponse>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getProfile>>,
@@ -236,7 +243,7 @@ export const updateProfile = async (
 };
 
 export const getUpdateProfileMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -277,13 +284,15 @@ export type UpdateProfileMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateProfile>>
 >;
 export type UpdateProfileMutationBody = BodyType<UpsertUserProfileBody>;
-export type UpdateProfileMutationError = ErrorType<unknown>;
+export type UpdateProfileMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
 
 /**
  * @summary Create or update user profile
  */
 export const useUpdateProfile = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -337,7 +346,7 @@ export const getGetFoodsQueryKey = (params?: GetFoodsParams) => {
 
 export const getGetFoodsQueryOptions = <
   TData = Awaited<ReturnType<typeof getFoods>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetFoodsParams,
   options?: {
@@ -367,7 +376,9 @@ export const getGetFoodsQueryOptions = <
 export type GetFoodsQueryResult = NonNullable<
   Awaited<ReturnType<typeof getFoods>>
 >;
-export type GetFoodsQueryError = ErrorType<unknown>;
+export type GetFoodsQueryError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
 
 /**
  * @summary List and search foods
@@ -375,7 +386,7 @@ export type GetFoodsQueryError = ErrorType<unknown>;
 
 export function useGetFoods<
   TData = Awaited<ReturnType<typeof getFoods>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetFoodsParams,
   options?: {
@@ -416,7 +427,9 @@ export const createFood = async (
 };
 
 export const getCreateFoodMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | ConflictResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -457,13 +470,17 @@ export type CreateFoodMutationResult = NonNullable<
   Awaited<ReturnType<typeof createFood>>
 >;
 export type CreateFoodMutationBody = BodyType<CreateFoodBody>;
-export type CreateFoodMutationError = ErrorType<unknown>;
+export type CreateFoodMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | ConflictResponse
+>;
 
 /**
  * @summary Create a food
  */
 export const useCreateFood = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | ConflictResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -505,7 +522,7 @@ export const getGetFoodQueryKey = (id: number) => {
 
 export const getGetFoodQueryOptions = <
   TData = Awaited<ReturnType<typeof getFood>>,
-  TError = ErrorType<void>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse | void>,
 >(
   id: number,
   options?: {
@@ -534,7 +551,9 @@ export const getGetFoodQueryOptions = <
 export type GetFoodQueryResult = NonNullable<
   Awaited<ReturnType<typeof getFood>>
 >;
-export type GetFoodQueryError = ErrorType<void>;
+export type GetFoodQueryError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | void
+>;
 
 /**
  * @summary Get a food by id
@@ -542,7 +561,7 @@ export type GetFoodQueryError = ErrorType<void>;
 
 export function useGetFood<
   TData = Awaited<ReturnType<typeof getFood>>,
-  TError = ErrorType<void>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse | void>,
 >(
   id: number,
   options?: {
@@ -580,7 +599,12 @@ export const updateFood = async (
 };
 
 export const getUpdateFoodMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    | BadRequestResponse
+    | UnauthorizedResponse
+    | NotFoundResponse
+    | ConflictResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -621,13 +645,23 @@ export type UpdateFoodMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateFood>>
 >;
 export type UpdateFoodMutationBody = BodyType<CreateFoodBody>;
-export type UpdateFoodMutationError = ErrorType<unknown>;
+export type UpdateFoodMutationError = ErrorType<
+  | BadRequestResponse
+  | UnauthorizedResponse
+  | NotFoundResponse
+  | ConflictResponse
+>;
 
 /**
  * @summary Update a food
  */
 export const useUpdateFood = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    | BadRequestResponse
+    | UnauthorizedResponse
+    | NotFoundResponse
+    | ConflictResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -664,7 +698,12 @@ export const deleteFood = async (
 };
 
 export const getDeleteFoodMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    | BadRequestResponse
+    | UnauthorizedResponse
+    | NotFoundResponse
+    | ConflictResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -705,13 +744,23 @@ export type DeleteFoodMutationResult = NonNullable<
   Awaited<ReturnType<typeof deleteFood>>
 >;
 
-export type DeleteFoodMutationError = ErrorType<unknown>;
+export type DeleteFoodMutationError = ErrorType<
+  | BadRequestResponse
+  | UnauthorizedResponse
+  | NotFoundResponse
+  | ConflictResponse
+>;
 
 /**
  * @summary Delete a food
  */
 export const useDeleteFood = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    | BadRequestResponse
+    | UnauthorizedResponse
+    | NotFoundResponse
+    | ConflictResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -752,7 +801,7 @@ export const getGetFoodCategoriesQueryKey = () => {
 
 export const getGetFoodCategoriesQueryOptions = <
   TData = Awaited<ReturnType<typeof getFoodCategories>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<UnauthorizedResponse>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getFoodCategories>>,
@@ -779,7 +828,7 @@ export const getGetFoodCategoriesQueryOptions = <
 export type GetFoodCategoriesQueryResult = NonNullable<
   Awaited<ReturnType<typeof getFoodCategories>>
 >;
-export type GetFoodCategoriesQueryError = ErrorType<unknown>;
+export type GetFoodCategoriesQueryError = ErrorType<UnauthorizedResponse>;
 
 /**
  * @summary Get all food categories
@@ -787,7 +836,7 @@ export type GetFoodCategoriesQueryError = ErrorType<unknown>;
 
 export function useGetFoodCategories<
   TData = Awaited<ReturnType<typeof getFoodCategories>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<UnauthorizedResponse>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getFoodCategories>>,
@@ -828,7 +877,9 @@ export const getGetFoodPortionsQueryKey = (id: number) => {
 
 export const getGetFoodPortionsQueryOptions = <
   TData = Awaited<ReturnType<typeof getFoodPortions>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
 >(
   id: number,
   options?: {
@@ -863,7 +914,9 @@ export const getGetFoodPortionsQueryOptions = <
 export type GetFoodPortionsQueryResult = NonNullable<
   Awaited<ReturnType<typeof getFoodPortions>>
 >;
-export type GetFoodPortionsQueryError = ErrorType<unknown>;
+export type GetFoodPortionsQueryError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+>;
 
 /**
  * @summary Get saved portions for a food
@@ -871,7 +924,9 @@ export type GetFoodPortionsQueryError = ErrorType<unknown>;
 
 export function useGetFoodPortions<
   TData = Awaited<ReturnType<typeof getFoodPortions>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
 >(
   id: number,
   options?: {
@@ -913,7 +968,9 @@ export const createPortion = async (
 };
 
 export const getCreatePortionMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -954,13 +1011,17 @@ export type CreatePortionMutationResult = NonNullable<
   Awaited<ReturnType<typeof createPortion>>
 >;
 export type CreatePortionMutationBody = BodyType<CreatePortionBody>;
-export type CreatePortionMutationError = ErrorType<unknown>;
+export type CreatePortionMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+>;
 
 /**
  * @summary Save a portion for a food
  */
 export const useCreatePortion = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -983,7 +1044,7 @@ export const useCreatePortion = <
  * @summary Delete a saved portion
  */
 export const getDeletePortionUrl = (id: number) => {
-  return `/api/portions/${id}`;
+  return `/api/foods/portions/${id}`;
 };
 
 export const deletePortion = async (
@@ -997,7 +1058,9 @@ export const deletePortion = async (
 };
 
 export const getDeletePortionMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1038,13 +1101,17 @@ export type DeletePortionMutationResult = NonNullable<
   Awaited<ReturnType<typeof deletePortion>>
 >;
 
-export type DeletePortionMutationError = ErrorType<unknown>;
+export type DeletePortionMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+>;
 
 /**
  * @summary Delete a saved portion
  */
 export const useDeletePortion = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1098,7 +1165,7 @@ export const getGetRecipesQueryKey = (params?: GetRecipesParams) => {
 
 export const getGetRecipesQueryOptions = <
   TData = Awaited<ReturnType<typeof getRecipes>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetRecipesParams,
   options?: {
@@ -1128,7 +1195,9 @@ export const getGetRecipesQueryOptions = <
 export type GetRecipesQueryResult = NonNullable<
   Awaited<ReturnType<typeof getRecipes>>
 >;
-export type GetRecipesQueryError = ErrorType<unknown>;
+export type GetRecipesQueryError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
 
 /**
  * @summary List all recipes
@@ -1136,7 +1205,7 @@ export type GetRecipesQueryError = ErrorType<unknown>;
 
 export function useGetRecipes<
   TData = Awaited<ReturnType<typeof getRecipes>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetRecipesParams,
   options?: {
@@ -1177,7 +1246,7 @@ export const createRecipe = async (
 };
 
 export const getCreateRecipeMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1218,13 +1287,15 @@ export type CreateRecipeMutationResult = NonNullable<
   Awaited<ReturnType<typeof createRecipe>>
 >;
 export type CreateRecipeMutationBody = BodyType<CreateRecipeBody>;
-export type CreateRecipeMutationError = ErrorType<unknown>;
+export type CreateRecipeMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
 
 /**
  * @summary Create a recipe
  */
 export const useCreateRecipe = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1266,7 +1337,7 @@ export const getGetRecipeQueryKey = (id: number) => {
 
 export const getGetRecipeQueryOptions = <
   TData = Awaited<ReturnType<typeof getRecipe>>,
-  TError = ErrorType<void>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse | void>,
 >(
   id: number,
   options?: {
@@ -1299,7 +1370,9 @@ export const getGetRecipeQueryOptions = <
 export type GetRecipeQueryResult = NonNullable<
   Awaited<ReturnType<typeof getRecipe>>
 >;
-export type GetRecipeQueryError = ErrorType<void>;
+export type GetRecipeQueryError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | void
+>;
 
 /**
  * @summary Get a recipe with ingredients
@@ -1307,7 +1380,7 @@ export type GetRecipeQueryError = ErrorType<void>;
 
 export function useGetRecipe<
   TData = Awaited<ReturnType<typeof getRecipe>>,
-  TError = ErrorType<void>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse | void>,
 >(
   id: number,
   options?: {
@@ -1349,7 +1422,9 @@ export const updateRecipe = async (
 };
 
 export const getUpdateRecipeMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1390,13 +1465,17 @@ export type UpdateRecipeMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateRecipe>>
 >;
 export type UpdateRecipeMutationBody = BodyType<CreateRecipeBody>;
-export type UpdateRecipeMutationError = ErrorType<unknown>;
+export type UpdateRecipeMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+>;
 
 /**
  * @summary Update a recipe
  */
 export const useUpdateRecipe = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1433,7 +1512,9 @@ export const deleteRecipe = async (
 };
 
 export const getDeleteRecipeMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1474,13 +1555,17 @@ export type DeleteRecipeMutationResult = NonNullable<
   Awaited<ReturnType<typeof deleteRecipe>>
 >;
 
-export type DeleteRecipeMutationError = ErrorType<unknown>;
+export type DeleteRecipeMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+>;
 
 /**
  * @summary Delete a recipe
  */
 export const useDeleteRecipe = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1522,7 +1607,7 @@ export const getGetDayLogQueryKey = (date: string) => {
 
 export const getGetDayLogQueryOptions = <
   TData = Awaited<ReturnType<typeof getDayLog>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   date: string,
   options?: {
@@ -1555,7 +1640,9 @@ export const getGetDayLogQueryOptions = <
 export type GetDayLogQueryResult = NonNullable<
   Awaited<ReturnType<typeof getDayLog>>
 >;
-export type GetDayLogQueryError = ErrorType<unknown>;
+export type GetDayLogQueryError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
 
 /**
  * @summary Get all food log entries for a date (YYYY-MM-DD)
@@ -1563,7 +1650,7 @@ export type GetDayLogQueryError = ErrorType<unknown>;
 
 export function useGetDayLog<
   TData = Awaited<ReturnType<typeof getDayLog>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   date: string,
   options?: {
@@ -1605,7 +1692,9 @@ export const createLogEntry = async (
 };
 
 export const getCreateLogEntryMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1646,13 +1735,17 @@ export type CreateLogEntryMutationResult = NonNullable<
   Awaited<ReturnType<typeof createLogEntry>>
 >;
 export type CreateLogEntryMutationBody = BodyType<CreateLogEntryBody>;
-export type CreateLogEntryMutationError = ErrorType<unknown>;
+export type CreateLogEntryMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+>;
 
 /**
  * @summary Add a food or recipe to a meal slot
  */
 export const useCreateLogEntry = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1693,7 +1786,9 @@ export const updateLogEntry = async (
 };
 
 export const getUpdateLogEntryMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1734,13 +1829,17 @@ export type UpdateLogEntryMutationResult = NonNullable<
   Awaited<ReturnType<typeof updateLogEntry>>
 >;
 export type UpdateLogEntryMutationBody = BodyType<UpdateLogEntryBody>;
-export type UpdateLogEntryMutationError = ErrorType<unknown>;
+export type UpdateLogEntryMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+>;
 
 /**
  * @summary Update a log entry quantity
  */
 export const useUpdateLogEntry = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1778,7 +1877,9 @@ export const deleteLogEntry = async (
 };
 
 export const getDeleteLogEntryMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1819,13 +1920,17 @@ export type DeleteLogEntryMutationResult = NonNullable<
   Awaited<ReturnType<typeof deleteLogEntry>>
 >;
 
-export type DeleteLogEntryMutationError = ErrorType<unknown>;
+export type DeleteLogEntryMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+>;
 
 /**
  * @summary Remove a food from a meal
  */
 export const useDeleteLogEntry = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1845,7 +1950,7 @@ export const useDeleteLogEntry = <
 };
 
 /**
- * @summary List exercise entries for a date range
+ * @summary List exercise entries, optionally for a single date
  */
 export const getGetExercisesUrl = (params?: GetExercisesParams) => {
   const normalizedParams = new URLSearchParams();
@@ -1879,7 +1984,7 @@ export const getGetExercisesQueryKey = (params?: GetExercisesParams) => {
 
 export const getGetExercisesQueryOptions = <
   TData = Awaited<ReturnType<typeof getExercises>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetExercisesParams,
   options?: {
@@ -1909,15 +2014,17 @@ export const getGetExercisesQueryOptions = <
 export type GetExercisesQueryResult = NonNullable<
   Awaited<ReturnType<typeof getExercises>>
 >;
-export type GetExercisesQueryError = ErrorType<unknown>;
+export type GetExercisesQueryError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
 
 /**
- * @summary List exercise entries for a date range
+ * @summary List exercise entries, optionally for a single date
  */
 
 export function useGetExercises<
   TData = Awaited<ReturnType<typeof getExercises>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetExercisesParams,
   options?: {
@@ -1958,7 +2065,7 @@ export const createExercise = async (
 };
 
 export const getCreateExerciseMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -1999,13 +2106,15 @@ export type CreateExerciseMutationResult = NonNullable<
   Awaited<ReturnType<typeof createExercise>>
 >;
 export type CreateExerciseMutationBody = BodyType<CreateExerciseBody>;
-export type CreateExerciseMutationError = ErrorType<unknown>;
+export type CreateExerciseMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
 
 /**
  * @summary Log an exercise
  */
 export const useCreateExercise = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -2042,7 +2151,9 @@ export const deleteExercise = async (
 };
 
 export const getDeleteExerciseMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -2083,13 +2194,17 @@ export type DeleteExerciseMutationResult = NonNullable<
   Awaited<ReturnType<typeof deleteExercise>>
 >;
 
-export type DeleteExerciseMutationError = ErrorType<unknown>;
+export type DeleteExerciseMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+>;
 
 /**
  * @summary Delete an exercise entry
  */
 export const useDeleteExercise = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -2143,7 +2258,7 @@ export const getGetWeightLogsQueryKey = (params?: GetWeightLogsParams) => {
 
 export const getGetWeightLogsQueryOptions = <
   TData = Awaited<ReturnType<typeof getWeightLogs>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetWeightLogsParams,
   options?: {
@@ -2173,7 +2288,9 @@ export const getGetWeightLogsQueryOptions = <
 export type GetWeightLogsQueryResult = NonNullable<
   Awaited<ReturnType<typeof getWeightLogs>>
 >;
-export type GetWeightLogsQueryError = ErrorType<unknown>;
+export type GetWeightLogsQueryError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
 
 /**
  * @summary Get weight and body measurement logs
@@ -2181,7 +2298,7 @@ export type GetWeightLogsQueryError = ErrorType<unknown>;
 
 export function useGetWeightLogs<
   TData = Awaited<ReturnType<typeof getWeightLogs>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetWeightLogsParams,
   options?: {
@@ -2222,7 +2339,7 @@ export const createWeightLog = async (
 };
 
 export const getCreateWeightLogMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -2263,13 +2380,15 @@ export type CreateWeightLogMutationResult = NonNullable<
   Awaited<ReturnType<typeof createWeightLog>>
 >;
 export type CreateWeightLogMutationBody = BodyType<CreateWeightLogBody>;
-export type CreateWeightLogMutationError = ErrorType<unknown>;
+export type CreateWeightLogMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
 
 /**
  * @summary Log weight and body measurements
  */
 export const useCreateWeightLog = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -2306,7 +2425,9 @@ export const deleteWeightLog = async (
 };
 
 export const getDeleteWeightLogMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -2347,13 +2468,17 @@ export type DeleteWeightLogMutationResult = NonNullable<
   Awaited<ReturnType<typeof deleteWeightLog>>
 >;
 
-export type DeleteWeightLogMutationError = ErrorType<unknown>;
+export type DeleteWeightLogMutationError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+>;
 
 /**
  * @summary Delete a weight log entry
  */
 export const useDeleteWeightLog = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    BadRequestResponse | UnauthorizedResponse | NotFoundResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -2407,7 +2532,7 @@ export const getGetTodaySummaryQueryKey = (params?: GetTodaySummaryParams) => {
 
 export const getGetTodaySummaryQueryOptions = <
   TData = Awaited<ReturnType<typeof getTodaySummary>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetTodaySummaryParams,
   options?: {
@@ -2437,7 +2562,9 @@ export const getGetTodaySummaryQueryOptions = <
 export type GetTodaySummaryQueryResult = NonNullable<
   Awaited<ReturnType<typeof getTodaySummary>>
 >;
-export type GetTodaySummaryQueryError = ErrorType<unknown>;
+export type GetTodaySummaryQueryError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
 
 /**
  * @summary Get today's calorie and macro summary
@@ -2445,7 +2572,7 @@ export type GetTodaySummaryQueryError = ErrorType<unknown>;
 
 export function useGetTodaySummary<
   TData = Awaited<ReturnType<typeof getTodaySummary>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetTodaySummaryParams,
   options?: {
@@ -2490,7 +2617,7 @@ export const getGetMonthCalendarQueryKey = (year: number, month: number) => {
 
 export const getGetMonthCalendarQueryOptions = <
   TData = Awaited<ReturnType<typeof getMonthCalendar>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   year: number,
   month: number,
@@ -2528,7 +2655,9 @@ export const getGetMonthCalendarQueryOptions = <
 export type GetMonthCalendarQueryResult = NonNullable<
   Awaited<ReturnType<typeof getMonthCalendar>>
 >;
-export type GetMonthCalendarQueryError = ErrorType<unknown>;
+export type GetMonthCalendarQueryError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
 
 /**
  * @summary Get monthly calendar data with calorie status per day
@@ -2536,7 +2665,7 @@ export type GetMonthCalendarQueryError = ErrorType<unknown>;
 
 export function useGetMonthCalendar<
   TData = Awaited<ReturnType<typeof getMonthCalendar>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   year: number,
   month: number,
@@ -2593,7 +2722,7 @@ export const getGetWeeklyStatsQueryKey = (params?: GetWeeklyStatsParams) => {
 
 export const getGetWeeklyStatsQueryOptions = <
   TData = Awaited<ReturnType<typeof getWeeklyStats>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetWeeklyStatsParams,
   options?: {
@@ -2623,7 +2752,9 @@ export const getGetWeeklyStatsQueryOptions = <
 export type GetWeeklyStatsQueryResult = NonNullable<
   Awaited<ReturnType<typeof getWeeklyStats>>
 >;
-export type GetWeeklyStatsQueryError = ErrorType<unknown>;
+export type GetWeeklyStatsQueryError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
 
 /**
  * @summary Get 7-day statistics
@@ -2631,7 +2762,7 @@ export type GetWeeklyStatsQueryError = ErrorType<unknown>;
 
 export function useGetWeeklyStats<
   TData = Awaited<ReturnType<typeof getWeeklyStats>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetWeeklyStatsParams,
   options?: {
@@ -2687,7 +2818,7 @@ export const getGetMonthlyStatsQueryKey = (params?: GetMonthlyStatsParams) => {
 
 export const getGetMonthlyStatsQueryOptions = <
   TData = Awaited<ReturnType<typeof getMonthlyStats>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetMonthlyStatsParams,
   options?: {
@@ -2717,7 +2848,9 @@ export const getGetMonthlyStatsQueryOptions = <
 export type GetMonthlyStatsQueryResult = NonNullable<
   Awaited<ReturnType<typeof getMonthlyStats>>
 >;
-export type GetMonthlyStatsQueryError = ErrorType<unknown>;
+export type GetMonthlyStatsQueryError = ErrorType<
+  BadRequestResponse | UnauthorizedResponse
+>;
 
 /**
  * @summary Get 30-day statistics
@@ -2725,7 +2858,7 @@ export type GetMonthlyStatsQueryError = ErrorType<unknown>;
 
 export function useGetMonthlyStats<
   TData = Awaited<ReturnType<typeof getMonthlyStats>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
 >(
   params?: GetMonthlyStatsParams,
   options?: {
@@ -2766,7 +2899,13 @@ export const analyzeImage = async (
 };
 
 export const getAnalyzeImageMutationOptions = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    | BadRequestResponse
+    | UnauthorizedResponse
+    | TooManyRequestsResponse
+    | BadGatewayResponse
+    | ServiceUnavailableResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -2807,13 +2946,25 @@ export type AnalyzeImageMutationResult = NonNullable<
   Awaited<ReturnType<typeof analyzeImage>>
 >;
 export type AnalyzeImageMutationBody = BodyType<AnalyzeImageBody>;
-export type AnalyzeImageMutationError = ErrorType<unknown>;
+export type AnalyzeImageMutationError = ErrorType<
+  | BadRequestResponse
+  | UnauthorizedResponse
+  | TooManyRequestsResponse
+  | BadGatewayResponse
+  | ServiceUnavailableResponse
+>;
 
 /**
  * @summary Analyze a food photo and return estimated nutritional breakdown
  */
 export const useAnalyzeImage = <
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    | BadRequestResponse
+    | UnauthorizedResponse
+    | TooManyRequestsResponse
+    | BadGatewayResponse
+    | ServiceUnavailableResponse
+  >,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -2869,7 +3020,13 @@ export const getGetAiWeeklySummaryQueryKey = (
 
 export const getGetAiWeeklySummaryQueryOptions = <
   TData = Awaited<ReturnType<typeof getAiWeeklySummary>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    | BadRequestResponse
+    | UnauthorizedResponse
+    | TooManyRequestsResponse
+    | BadGatewayResponse
+    | ServiceUnavailableResponse
+  >,
 >(
   params?: GetAiWeeklySummaryParams,
   options?: {
@@ -2900,7 +3057,13 @@ export const getGetAiWeeklySummaryQueryOptions = <
 export type GetAiWeeklySummaryQueryResult = NonNullable<
   Awaited<ReturnType<typeof getAiWeeklySummary>>
 >;
-export type GetAiWeeklySummaryQueryError = ErrorType<unknown>;
+export type GetAiWeeklySummaryQueryError = ErrorType<
+  | BadRequestResponse
+  | UnauthorizedResponse
+  | TooManyRequestsResponse
+  | BadGatewayResponse
+  | ServiceUnavailableResponse
+>;
 
 /**
  * @summary Get AI-generated weekly nutrition and progress summary
@@ -2908,7 +3071,13 @@ export type GetAiWeeklySummaryQueryError = ErrorType<unknown>;
 
 export function useGetAiWeeklySummary<
   TData = Awaited<ReturnType<typeof getAiWeeklySummary>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    | BadRequestResponse
+    | UnauthorizedResponse
+    | TooManyRequestsResponse
+    | BadGatewayResponse
+    | ServiceUnavailableResponse
+  >,
 >(
   params?: GetAiWeeklySummaryParams,
   options?: {
@@ -2968,7 +3137,13 @@ export const getGetAiMonthlySummaryQueryKey = (
 
 export const getGetAiMonthlySummaryQueryOptions = <
   TData = Awaited<ReturnType<typeof getAiMonthlySummary>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    | BadRequestResponse
+    | UnauthorizedResponse
+    | TooManyRequestsResponse
+    | BadGatewayResponse
+    | ServiceUnavailableResponse
+  >,
 >(
   params?: GetAiMonthlySummaryParams,
   options?: {
@@ -3000,7 +3175,13 @@ export const getGetAiMonthlySummaryQueryOptions = <
 export type GetAiMonthlySummaryQueryResult = NonNullable<
   Awaited<ReturnType<typeof getAiMonthlySummary>>
 >;
-export type GetAiMonthlySummaryQueryError = ErrorType<unknown>;
+export type GetAiMonthlySummaryQueryError = ErrorType<
+  | BadRequestResponse
+  | UnauthorizedResponse
+  | TooManyRequestsResponse
+  | BadGatewayResponse
+  | ServiceUnavailableResponse
+>;
 
 /**
  * @summary Get AI-generated monthly nutrition and progress summary
@@ -3008,7 +3189,13 @@ export type GetAiMonthlySummaryQueryError = ErrorType<unknown>;
 
 export function useGetAiMonthlySummary<
   TData = Awaited<ReturnType<typeof getAiMonthlySummary>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<
+    | BadRequestResponse
+    | UnauthorizedResponse
+    | TooManyRequestsResponse
+    | BadGatewayResponse
+    | ServiceUnavailableResponse
+  >,
 >(
   params?: GetAiMonthlySummaryParams,
   options?: {
@@ -3049,7 +3236,7 @@ export const register = async (
 };
 
 export const getRegisterMutationOptions = <
-  TError = ErrorType<void>,
+  TError = ErrorType<BadRequestResponse | void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -3090,13 +3277,13 @@ export type RegisterMutationResult = NonNullable<
   Awaited<ReturnType<typeof register>>
 >;
 export type RegisterMutationBody = BodyType<RegisterBody>;
-export type RegisterMutationError = ErrorType<void>;
+export type RegisterMutationError = ErrorType<BadRequestResponse | void>;
 
 /**
  * @summary Create an account and start a session
  */
 export const useRegister = <
-  TError = ErrorType<void>,
+  TError = ErrorType<BadRequestResponse | void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -3135,7 +3322,7 @@ export const login = async (
 };
 
 export const getLoginMutationOptions = <
-  TError = ErrorType<void>,
+  TError = ErrorType<BadRequestResponse | void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -3176,13 +3363,13 @@ export type LoginMutationResult = NonNullable<
   Awaited<ReturnType<typeof login>>
 >;
 export type LoginMutationBody = BodyType<LoginBody>;
-export type LoginMutationError = ErrorType<void>;
+export type LoginMutationError = ErrorType<BadRequestResponse | void>;
 
 /**
  * @summary Log in and start a session
  */
 export const useLogin = <
-  TError = ErrorType<void>,
+  TError = ErrorType<BadRequestResponse | void>,
   TContext = unknown,
 >(options?: {
   mutation?: UseMutationOptions<
@@ -3363,7 +3550,7 @@ export const getGetAiUsageQueryKey = () => {
 
 export const getGetAiUsageQueryOptions = <
   TData = Awaited<ReturnType<typeof getAiUsage>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<UnauthorizedResponse | ServiceUnavailableResponse>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getAiUsage>>,
@@ -3390,7 +3577,9 @@ export const getGetAiUsageQueryOptions = <
 export type GetAiUsageQueryResult = NonNullable<
   Awaited<ReturnType<typeof getAiUsage>>
 >;
-export type GetAiUsageQueryError = ErrorType<unknown>;
+export type GetAiUsageQueryError = ErrorType<
+  UnauthorizedResponse | ServiceUnavailableResponse
+>;
 
 /**
  * @summary Get today's AI usage for the logged-in user
@@ -3398,7 +3587,7 @@ export type GetAiUsageQueryError = ErrorType<unknown>;
 
 export function useGetAiUsage<
   TData = Awaited<ReturnType<typeof getAiUsage>>,
-  TError = ErrorType<unknown>,
+  TError = ErrorType<UnauthorizedResponse | ServiceUnavailableResponse>,
 >(options?: {
   query?: UseQueryOptions<
     Awaited<ReturnType<typeof getAiUsage>>,

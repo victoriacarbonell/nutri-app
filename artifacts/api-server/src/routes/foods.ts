@@ -63,6 +63,19 @@ router.post("/", async (req, res) => {
   res.status(201).json(withCategory(food));
 });
 
+// Antes que las rutas /:id: si no, DELETE /portions/5 llegaría a /:id con id "portions".
+router.delete("/portions/:id", async (req, res) => {
+  const { id } = DeletePortionParams.parse({ id: req.params.id });
+  // Solo se puede borrar una porción de un alimento propio.
+  const [portion] = await db.select({ id: portionsTable.id })
+    .from(portionsTable)
+    .innerJoin(foodsTable, eq(foodsTable.id, portionsTable.foodId))
+    .where(and(eq(portionsTable.id, id), eq(foodsTable.userId, req.userId)));
+  if (!portion) throw notFound("Porción");
+  await db.delete(portionsTable).where(eq(portionsTable.id, id));
+  res.status(204).end();
+});
+
 router.get("/:id", async (req, res) => {
   const { id } = GetFoodParams.parse({ id: req.params.id });
   res.json(withCategory(await findOwnFood(req.userId, id)));
@@ -101,18 +114,6 @@ router.post("/:id/portions", async (req, res) => {
   await findOwnFood(req.userId, id);
   const [portion] = await db.insert(portionsTable).values({ foodId: id, ...body }).returning();
   res.status(201).json(portion);
-});
-
-router.delete("/portions/:id", async (req, res) => {
-  const { id } = DeletePortionParams.parse({ id: req.params.id });
-  // Solo se puede borrar una porción de un alimento propio.
-  const [portion] = await db.select({ id: portionsTable.id })
-    .from(portionsTable)
-    .innerJoin(foodsTable, eq(foodsTable.id, portionsTable.foodId))
-    .where(and(eq(portionsTable.id, id), eq(foodsTable.userId, req.userId)));
-  if (!portion) throw notFound("Porción");
-  await db.delete(portionsTable).where(eq(portionsTable.id, id));
-  res.status(204).end();
 });
 
 export default router;

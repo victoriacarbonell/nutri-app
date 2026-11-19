@@ -3,13 +3,17 @@ import { openai as openaiClient, AI_MODEL } from "@workspace/integrations-openai
 import { db } from "@workspace/db";
 import { logEntriesTable, exercisesTable, userProfileTable, weightLogsTable } from "@workspace/db";
 import { eq, and, gte, lte, sql, asc } from "drizzle-orm";
+import { z } from "zod";
 import {
   AnalyzeImageBody,
+  AnalyzeImageResponse,
   GetAiWeeklySummaryQueryParams,
   GetAiMonthlySummaryQueryParams,
 } from "@workspace/api-zod";
 import { addDays, resolveDate } from "../lib/dates";
 import { aiUsage, enforceAiLimit, recordAiRequest } from "../lib/ai-limits";
+import { HttpError } from "../lib/http-error";
+import { getCalorieGoal } from "./profile";
 
 const router = Router();
 
@@ -35,6 +39,39 @@ router.use(enforceAiLimit);
 // El middleware anterior garantiza que el cliente existe al llegar a las rutas.
 const openai = openaiClient!;
 
+// Tipo real de la imagen a partir de sus primeros bytes en base64. Antes se
+// declaraba siempre JPEG aunque fuera PNG o WebP.
+function imageMimeType(base64: string): string {
+  if (base64.startsWith("iVBOR")) return "image/png";
+  if (base64.startsWith("UklGR")) return "image/webp";
+  if (base64.startsWith("R0lGOD")) return "image/gif";
+  return "image/jpeg";
+}
+
+// Interpreta la respuesta del modelo y la valida. Si no sirve, es un fallo del
+// servicio de IA (502), no un éxito vacío.
+function parseAiJson<T>(content: string, schema: z.ZodType<T>, log: { error: (obj: object, msg: string) => void }): T {
+  let data: unknown;
+  try {
+    data = JSON.parse(content);
+  } catch (err) {
+    log.error({ err, raw: content }, "AI response is not JSON");
+    throw new HttpError(502, "ai_invalid_response", "La IA ha devuelto una respuesta que no se ha podido leer. Inténtalo de nuevo.");
+  }
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    log.error({ issues: result.error.issues, raw: content }, "AI response does not match the schema");
+    throw new HttpError(502, "ai_invalid_response", "La IA ha devuelto una respuesta incompleta. Inténtalo de nuevo.");
+  }
+  return result.data;
+}
+
+const AiSummaryContent = z.object({
+  summary: z.string(),
+  insights: z.array(z.string()),
+  recommendations: z.array(z.string()),
+});
+
 router.post("/analyze-image", async (req, res) => {
   const body = AnalyzeImageBody.parse(req.body);
 
@@ -49,7 +86,7 @@ router.post("/analyze-image", async (req, res) => {
           {
             type: "image_url",
             image_url: {
-              url: `data:image/jpeg;base64,${body.imageBase64}`,
+              url: `data:${imageMimeType(body.imageBase64)};base64,${body.imageBase64}`,
               detail: "high",
             },
           },
@@ -91,17 +128,12 @@ Be realistic with portion sizes. If the image is unclear, use "low" confidence.`
 
   await recordAiRequest(req.userId, "analyze_image");
   const content = response.choices[0]?.message?.content ?? "{}";
-  try {
-    const parsed = JSON.parse(content);
-    return res.json(parsed);
-  } catch {
-    return res.status(500).json({ error: "Failed to parse AI response", raw: content });
-  }
+  return res.json(parseAiJson(content, AnalyzeImageResponse, req.log));
 });
 
-// Datos de los ultimos `daysBack` dias hasta `endDate` incluido.
+// Datos de los últimos `daysBack` días hasta `endDate` incluido (7 o 30, como el panel).
 async function getRecentData(userId: number, daysBack: number, endDate: string) {
-  const startDate = addDays(endDate, -daysBack);
+  const startDate = addDays(endDate, -daysBack + 1);
 
   const [entries, exercises, profile, weights] = await Promise.all([
     db.select({
@@ -130,7 +162,7 @@ router.get("/weekly-summary", async (req, res) => {
 
   const avgCalories = entries.length ? entries.reduce((s, e) => s + Number(e.calories), 0) / entries.length : 0;
   const totalExercise = exercises.reduce((s, e) => s + e.caloriesBurned, 0);
-  const goal = profile?.manualCalorieGoal ?? 2000;
+  const { goal } = await getCalorieGoal(req.userId);
 
   if (entries.length === 0) {
     return res.json({
@@ -176,24 +208,13 @@ Responde en formato JSON:
 
   await recordAiRequest(req.userId, "weekly_summary");
   const content = response.choices[0]?.message?.content ?? "{}";
-  try {
-    const parsed = JSON.parse(content);
-    return res.json({
-      period: "weekly",
-      ...parsed,
-      score: Math.min(100, Math.round((entries.length / 7) * 50 + (Math.abs(avgCalories - goal) < 200 ? 50 : 25))),
-      generatedAt: new Date().toISOString(),
-    });
-  } catch (err) {
-    req.log.error({ err, raw: content }, "Error al parsear el resumen semanal");
-    return res.json({
-      period: "weekly",
-      summary: "No se ha podido generar el resumen. Inténtalo de nuevo en un momento.",
-      insights: [],
-      recommendations: [],
-      generatedAt: new Date().toISOString(),
-    });
-  }
+  const parsed = parseAiJson(content, AiSummaryContent, req.log);
+  return res.json({
+    period: "weekly",
+    ...parsed,
+    score: Math.min(100, Math.round((entries.length / 7) * 50 + (Math.abs(avgCalories - goal) < 200 ? 50 : 25))),
+    generatedAt: new Date().toISOString(),
+  });
 });
 
 router.get("/monthly-summary", async (req, res) => {
@@ -202,7 +223,7 @@ router.get("/monthly-summary", async (req, res) => {
 
   const avgCalories = entries.length ? entries.reduce((s, e) => s + Number(e.calories), 0) / entries.length : 0;
   const totalExercise = exercises.reduce((s, e) => s + e.caloriesBurned, 0);
-  const goal = profile?.manualCalorieGoal ?? 2000;
+  const { goal } = await getCalorieGoal(req.userId);
 
   if (entries.length === 0) {
     return res.json({
@@ -241,24 +262,13 @@ Responde en JSON:
 
   await recordAiRequest(req.userId, "monthly_summary");
   const content = response.choices[0]?.message?.content ?? "{}";
-  try {
-    const parsed = JSON.parse(content);
-    return res.json({
-      period: "monthly",
-      ...parsed,
-      score: Math.min(100, Math.round((entries.length / 30) * 60 + (Math.abs(avgCalories - goal) < 300 ? 40 : 20))),
-      generatedAt: new Date().toISOString(),
-    });
-  } catch (err) {
-    req.log.error({ err, raw: content }, "Error al parsear el resumen mensual");
-    return res.json({
-      period: "monthly",
-      summary: "No se ha podido generar el resumen. Inténtalo de nuevo en un momento.",
-      insights: [],
-      recommendations: [],
-      generatedAt: new Date().toISOString(),
-    });
-  }
+  const parsed = parseAiJson(content, AiSummaryContent, req.log);
+  return res.json({
+    period: "monthly",
+    ...parsed,
+    score: Math.min(100, Math.round((entries.length / 30) * 60 + (Math.abs(avgCalories - goal) < 300 ? 40 : 20))),
+    generatedAt: new Date().toISOString(),
+  });
 });
 
 export default router;

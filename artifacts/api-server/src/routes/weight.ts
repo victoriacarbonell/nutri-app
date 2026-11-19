@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db, weightLogsTable } from "@workspace/db";
-import { desc, eq, and } from "drizzle-orm";
+import { db, weightLogsTable, userProfileTable } from "@workspace/db";
+import { desc, eq, and, gt } from "drizzle-orm";
 import { CreateWeightLogBody, GetWeightLogsQueryParams, DeleteWeightLogParams } from "@workspace/api-zod";
 import { notFound } from "../lib/http-error";
 
@@ -19,6 +19,18 @@ router.get("/", async (req, res) => {
 router.post("/", async (req, res) => {
   const body = CreateWeightLogBody.parse(req.body);
   const [log] = await db.insert(weightLogsTable).values({ ...body, userId: req.userId }).returning();
+
+  // Si es el registro más reciente, actualiza el peso del perfil para que el
+  // objetivo de Harris-Benedict se recalcule con él.
+  const [newer] = await db.select({ id: weightLogsTable.id }).from(weightLogsTable)
+    .where(and(eq(weightLogsTable.userId, req.userId), gt(weightLogsTable.date, log.date)))
+    .limit(1);
+  if (!newer) {
+    await db.update(userProfileTable)
+      .set({ weightKg: log.weightKg, updatedAt: new Date() })
+      .where(eq(userProfileTable.userId, req.userId));
+  }
+
   res.status(201).json(log);
 });
 

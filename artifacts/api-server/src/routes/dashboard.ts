@@ -6,22 +6,12 @@ import {
   GetTodaySummaryQueryParams,
   GetWeeklyStatsQueryParams,
   GetMonthlyStatsQueryParams,
+  GetMonthCalendarParams,
 } from "@workspace/api-zod";
-import { calcHarrisBenedict, getProfile } from "./profile";
+import { getCalorieGoal } from "./profile";
 import { addDays, resolveDate } from "../lib/dates";
 
 const router = Router();
-
-async function getCalorieGoal(userId: number): Promise<{ goal: number; min: number | null; max: number | null; profileSetup: boolean }> {
-  const profile = await getProfile(userId);
-  if (!profile) return { goal: 2000, min: null, max: null, profileSetup: false };
-  return {
-    goal: profile.manualCalorieGoal ?? calcHarrisBenedict(profile),
-    min: profile.minCalories ?? null,
-    max: profile.maxCalories ?? null,
-    profileSetup: true,
-  };
-}
 
 function getDayStatus(calories: number, goal: number, min: number | null, max: number | null, hasLog: boolean): "on_track" | "over" | "under" | "no_data" {
   if (!hasLog) return "no_data";
@@ -65,8 +55,7 @@ router.get("/today", async (req, res) => {
 });
 
 router.get("/calendar/:year/:month", async (req, res) => {
-  const year = Number(req.params.year);
-  const month = Number(req.params.month);
+  const { year, month } = GetMonthCalendarParams.parse(req.params);
   const { goal, min, max } = await getCalorieGoal(req.userId);
 
   const startDate = `${year}-${String(month).padStart(2, "0")}-01`;

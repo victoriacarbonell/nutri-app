@@ -51,5 +51,18 @@ router.put("/", async (req, res) => {
   res.json({ ...profile, calculatedCalorieGoal: calcHarrisBenedict(profile) });
 });
 
-export { calcHarrisBenedict, getProfile };
+// Objetivo calórico del usuario: el manual si lo ha puesto, si no el de
+// Harris-Benedict, y 2000 kcal si todavía no tiene perfil.
+async function getCalorieGoal(userId: number): Promise<{ goal: number; min: number | null; max: number | null; profileSetup: boolean }> {
+  const profile = await getProfile(userId);
+  if (!profile) return { goal: 2000, min: null, max: null, profileSetup: false };
+  return {
+    goal: profile.manualCalorieGoal ?? calcHarrisBenedict(profile),
+    min: profile.minCalories ?? null,
+    max: profile.maxCalories ?? null,
+    profileSetup: true,
+  };
+}
+
+export { calcHarrisBenedict, getProfile, getCalorieGoal };
 export default router;

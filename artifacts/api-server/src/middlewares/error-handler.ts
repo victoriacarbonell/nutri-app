@@ -54,6 +54,12 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, _next) => {
   // Violaciones de restricciones de PostgreSQL. Drizzle envuelve el error del
   // driver en DrizzleQueryError y deja el original en `cause`.
   const pgError = ((err as Error & { cause?: unknown }).cause ?? err) as PgError;
+  // Clase 22 (data exception): un decimal en una columna entera, un número
+  // fuera de rango o una fecha imposible como 2026-02-30.
+  if (pgError.code?.startsWith("22")) {
+    res.status(400).json({ error: "invalid_value", message: "Algún valor no es válido (número, entero o fecha)" });
+    return;
+  }
   if (pgError.code === "23503") {
     res.status(409).json({ error: "conflict", message: "No se puede borrar: otros registros dependen de este" });
     return;
